@@ -37,15 +37,15 @@ cat("Step 2: Installing core packages...\n")
 
 # Core packages
 core_packages <- c(
-  "ggplot2",    # Plotting
-  "dplyr",      # Data manipulation
-  "tidyr",      # Data tidying
-  "lubridate",  # Date handling
-  "scales",     # Scale functions for ggplot2
-  "readr",      # Reading data files
-  "tibble",     # Modern data frames
-  "stringr",    # String manipulation
-  "purrr"       # Functional programming
+  "ggplot2", # Plotting
+  "dplyr", # Data manipulation
+  "tidyr", # Data tidying
+  "lubridate", # Date handling
+  "scales", # Scale functions for ggplot2
+  "readr", # Reading data files
+  "tibble", # Modern data frames
+  "stringr", # String manipulation
+  "purrr" # Functional programming
 )
 
 for (pkg in core_packages) {
@@ -56,10 +56,10 @@ cat("\n")
 cat("Step 3: Installing visualization packages...\n")
 
 viz_packages <- c(
-  "viridis",    # Color palettes
-  "RColorBrewer",  # Color palettes
-  "ggrepel",    # Better text labels
-  "patchwork"   # Combine plots
+  "viridis", # Color palettes
+  "RColorBrewer", # Color palettes
+  "ggrepel", # Better text labels
+  "patchwork" # Combine plots
 )
 
 for (pkg in viz_packages) {
@@ -92,13 +92,16 @@ test_packages <- c("ggplot2", "dplyr", "f1dataR")
 all_ok <- TRUE
 
 for (pkg in test_packages) {
-  result <- tryCatch({
-    library(pkg, character.only = TRUE, quietly = TRUE)
-    TRUE
-  }, error = function(e) {
-    FALSE
-  })
-  
+  result <- tryCatch(
+    {
+      library(pkg, character.only = TRUE, quietly = TRUE)
+      TRUE
+    },
+    error = function(e) {
+      FALSE
+    }
+  )
+
   if (result) {
     cat(sprintf("✓ %s loads successfully\n", pkg))
   } else {

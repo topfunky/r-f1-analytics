@@ -11,13 +11,13 @@ help:
 # Format all R source files with air
 format:
 	@echo "Formatting R files with air..."
-	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air {}
+	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air format {}
 	@echo "Formatting complete!"
 
 # Check formatting without modifying files
 format-check:
 	@echo "Checking R file formatting..."
-	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air --check {}
+	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air format --check {}
 
 # Generate all plots
 plots:
