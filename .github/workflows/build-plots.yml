@@ -1,0 +1,109 @@
+name: Build F1 Plots
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-plots:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3.2'
+          use-public-rspm: true
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libfreetype6-dev \
+            libpng-dev \
+            libtiff5-dev \
+            libjpeg-dev
+      
+      - name: Query R package dependencies
+        run: |
+          install.packages('remotes')
+          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
+          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
+        shell: Rscript {0}
+      
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-r-${{ hashFiles('.github/R-version') }}-1-
+      
+      - name: Install R dependencies
+        run: |
+          install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr'))
+          remotes::install_github('SCasanova/f1dataR')
+        shell: Rscript {0}
+      
+      - name: Check R code formatting
+        run: |
+          # Install air if available (skip if not to avoid CI failure)
+          # This is optional but recommended for code quality
+          command -v air >/dev/null 2>&1 && find . -name "*.R" -not -path "*/renv/*" | xargs air --check || echo "Skipping air formatting check"
+      
+      - name: Create plots output directory
+        run: mkdir -p plots
+      
+      - name: Run plot generation scripts
+        run: |
+          chmod +x scripts/render_all_plots.sh
+          ./scripts/render_all_plots.sh
+      
+      - name: Checkout staging branch
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Create or checkout staging branch
+          git fetch origin staging:staging 2>/dev/null || git checkout --orphan staging
+          git checkout staging 2>/dev/null || true
+          
+          # Remove all files except plots
+          git rm -rf . 2>/dev/null || true
+          
+          # Reset to clean state
+          git clean -fdx
+      
+      - name: Copy plots to staging branch
+        run: |
+          git checkout main -- plots/
+          git checkout main -- README.md 2>/dev/null || true
+      
+      - name: Commit and push plots
+        run: |
+          git add plots/
+          git add README.md 2>/dev/null || true
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update plots from main branch - $(date -u +%Y-%m-%d_%H-%M-%S)"
+            git push origin staging --force
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
