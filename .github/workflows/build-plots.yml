@@ -50,8 +50,10 @@ jobs:
       - name: Install R dependencies
         run: |
           install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr'))
-          remotes::install_github('SCasanova/f1dataR')
+          remotes::install_github('SCasanova/f1dataR', auth_token = Sys.getenv('GITHUB_PAT'))
         shell: Rscript {0}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Check R code formatting
         run: |
