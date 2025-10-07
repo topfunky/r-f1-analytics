@@ -15,6 +15,7 @@ echo "Detected Ubuntu codename: $UBUNTU_CODENAME"
 echo "Installing prerequisites..."
 sudo apt update
 sudo apt install -y software-properties-common dirmngr wget
+sudo apt-get install -y libssl-dev libcurl4-openssl-dev
 
 # Add CRAN GPG key
 echo "Adding CRAN GPG key..."

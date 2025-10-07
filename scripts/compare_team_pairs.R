@@ -28,15 +28,39 @@ fetch_season_standings <- function(season) {
     return(readRDS(cache_file))
   }
   
-  # Fetch from API
+  # Fetch from f1dataR package
   tryCatch(
     {
-      standings <- load_driver_standings(season = season)
-      saveRDS(standings, cache_file)
-      return(standings)
+      # Load driver standings for the season
+      # load_standings returns data with: season, round, driver_id, driver, constructor_id, constructor, position, points, wins
+      standings <- load_standings(season = season)
+      
+      # Check if we got valid data
+      if (is.null(standings) || !is.data.frame(standings) || nrow(standings) == 0) {
+        return(NULL)
+      }
+      
+      # Get only the final standings (last round) for the season
+      final_standings <- standings %>%
+        filter(round == max(round))
+      
+      # Standardize column names
+      # f1dataR uses lowercase column names: driver, constructor, points, etc.
+      result <- final_standings %>%
+        mutate(
+          season = as.integer(season),
+          team = constructor,
+          driver = driver,
+          points = as.numeric(points)
+        ) %>%
+        select(season, driver, team, points)
+      
+      # Save to cache
+      saveRDS(result, cache_file)
+      return(result)
     },
     error = function(e) {
-      warning(sprintf("Could not fetch data for season %d: %s", season, e$message))
+      # Silently return NULL for seasons with no data or API errors
       return(NULL)
     }
   )
@@ -70,50 +94,28 @@ main <- function() {
       
       cat(sprintf("✓ Successfully fetched data for %d seasons\n", length(all_standings)))
       
+      # Check if we have any data at all
+      if (length(all_standings) == 0) {
+        stop("No data could be fetched for any season. Please check your internet connection and API availability.")
+      }
+      
       cat("Step 2: Processing team pairs...\n")
       
       # Combine all standings into one dataframe
-      combined_standings <- bind_rows(all_standings, .id = "season")
+      combined_standings <- bind_rows(all_standings)
       
-      # Ensure we have the necessary columns
-      # f1dataR returns: season, round, position, points, wins, Driver, Constructor
+      # The data already has the correct column names from our fetch function
       # We need: season, driver, team, points
       
-      if ("Constructor" %in% names(combined_standings)) {
-        team_col <- "Constructor"
-      } else if ("constructorId" %in% names(combined_standings)) {
-        team_col <- "constructorId"
-      } else if ("team" %in% names(combined_standings)) {
-        team_col <- "team"
-      } else {
-        stop("Cannot find team/constructor column in data")
-      }
-      
-      if ("Driver" %in% names(combined_standings)) {
-        driver_col <- "Driver"
-      } else if ("driverId" %in% names(combined_standings)) {
-        driver_col <- "driverId"
-      } else if ("driver" %in% names(combined_standings)) {
-        driver_col <- "driver"
-      } else {
-        stop("Cannot find driver column in data")
-      }
-      
-      # Get final standings for each season (highest round number)
+      # Ensure season is integer and points is numeric
       final_standings <- combined_standings %>%
-        group_by(season) %>%
-        filter(round == max(round)) %>%
-        ungroup() %>%
-        select(
-          season,
-          driver = all_of(driver_col),
-          team = all_of(team_col),
-          points
-        ) %>%
         mutate(
           season = as.integer(season),
           points = as.numeric(points)
-        )
+        ) %>%
+        select(season, driver, team, points) %>%
+        # Remove any NA values
+        filter(!is.na(driver), !is.na(team), !is.na(points))
       
       # Find teams with exactly 2 drivers (team pairs)
       team_pairs <- final_standings %>%

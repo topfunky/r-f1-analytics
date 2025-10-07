@@ -67,11 +67,30 @@ for (pkg in viz_packages) {
 }
 
 cat("\n")
-cat("Step 4: Installing f1dataR from GitHub...\n")
+cat("Step 4: Installing HTTP/API dependencies...\n")
+
+# Workaround for curl compilation issues with old libcurl
+cat("Installing curl from archive (older compatible version)...\n")
+tryCatch({
+  # Install older version of curl that works with older libcurl
+  install.packages("https://cran.r-project.org/src/contrib/Archive/curl/curl_5.2.3.tar.gz",
+                   repos = NULL,
+                   type = "source",
+                   configure.vars = "LIB_DIR=/usr/lib/x86_64-linux-gnu INCLUDE_DIR=/usr/include")
+  cat("✓ curl 5.2.3 installed successfully\n")
+  
+  install.packages("httr2", repos = "https://cloud.r-project.org/")
+  cat("✓ httr2 installed successfully\n")
+}, error = function(e) {
+  cat(sprintf("Error installing HTTP dependencies: %s\n", e$message))
+})
+
+cat("\n")
+cat("Step 5: Installing f1dataR from GitHub...\n")
 install_if_missing("SCasanova/f1dataR", repo = "GitHub")
 
 cat("\n")
-cat("Step 5: Creating project directories...\n")
+cat("Step 6: Creating project directories...\n")
 
 # Create necessary directories
 dirs <- c("plots", "data/cache", "scripts")
@@ -85,7 +104,7 @@ for (dir in dirs) {
 }
 
 cat("\n")
-cat("Step 6: Verifying installation...\n")
+cat("Step 7: Verifying installation...\n")
 
 # Test that key packages load
 test_packages <- c("ggplot2", "dplyr", "f1dataR")
