@@ -69,36 +69,55 @@ jobs:
           chmod +x scripts/render_all_plots.sh
           ./scripts/render_all_plots.sh
       
-      - name: Checkout staging branch
+      - name: Prepare staging directory
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          
-          # Create or checkout staging branch
-          git fetch origin staging:staging 2>/dev/null || git checkout --orphan staging
-          git checkout staging 2>/dev/null || true
-          
-          # Remove all files except plots
-          git rm -rf . 2>/dev/null || true
-          
-          # Reset to clean state
-          git clean -fdx
+          mkdir -p staging
+          cp -r plots staging/
+          cp README.md staging/ 2>/dev/null || echo "README.md not found, skipping"
       
-      - name: Copy plots to staging branch
-        run: |
-          git checkout main -- plots/
-          git checkout main -- README.md 2>/dev/null || true
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: f1-plots
+          path: staging/
+          include-hidden-files: true
       
-      - name: Commit and push plots
+      - name: Create step summary
         run: |
-          git add plots/
-          git add README.md 2>/dev/null || true
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## 🏎️ F1 Plots Build Summary
           
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
+          ✅ Plots generated successfully!
+          
+          ### 📦 Artifacts
+          - [Download plots artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          EOF
+          
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ### 🌐 Staging Branch
+          - [View staging branch](https://github.com/${{ github.repository }}/tree/staging)
+          - [View plots directory](https://github.com/${{ github.repository }}/tree/staging/plots)
+          
+          EOF
           else
-            git commit -m "Update plots from main branch - $(date -u +%Y-%m-%d_%H-%M-%S)"
-            git push origin staging --force
+            cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ### ℹ️ Note
+          Staging branch is only updated on pushes to main branch.
+          
+          EOF
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          **Generated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          EOF
+      
+      - name: Publish to staging branch
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./staging
+          publish_branch: staging
+          force_orphan: true
