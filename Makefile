@@ -43,23 +43,23 @@ clean:
 
 # Install R dependencies (traditional method)
 install:
-	@echo "Installing R dependencies..."
-	@Rscript -e "install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr', 'lubridate', 'scales'))"
-	@Rscript -e "remotes::install_github('SCasanova/f1dataR')"
+	@echo "Installing R dependencies from cran4linux RSPM..."
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr', 'lubridate', 'scales'))"
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); remotes::install_github('SCasanova/f1dataR')"
 	@echo "Dependencies installed!"
 
 # ==================== renv targets ====================
 
 # Install renv package
 renv-install:
-	@echo "Installing renv package..."
-	@Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv')"
+	@echo "Installing renv package from cran4linux RSPM..."
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv')"
 	@echo "renv installed successfully!"
 
 # Initialize renv in the project
 renv-init:
-	@echo "Initializing renv..."
-	@Rscript -e "renv::init()"
+	@echo "Initializing renv with cran4linux RSPM repository..."
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); renv::init(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/'))"
 	@echo "renv initialized! A private library has been created."
 	@echo "Note: Add renv/ and renv.lock to your version control."
 
@@ -72,8 +72,8 @@ renv-snapshot:
 
 # Install packages from renv.lock
 renv-restore:
-	@echo "Restoring packages from renv.lock..."
-	@Rscript -e "renv::restore()"
+	@echo "Restoring packages from renv.lock using cran4linux RSPM..."
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); renv::restore()"
 	@echo "Packages restored successfully!"
 
 # Check if packages are in sync with renv.lock
@@ -83,8 +83,8 @@ renv-status:
 
 # Update packages to latest versions
 renv-update:
-	@echo "Updating packages..."
-	@Rscript -e "renv::update()"
+	@echo "Updating packages from cran4linux RSPM..."
+	@Rscript -e "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/')); renv::update()"
 	@echo "Packages updated! Run 'make renv-snapshot' to save changes."
 
 # Remove unused packages from renv cache
