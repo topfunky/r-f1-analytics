@@ -37,16 +37,14 @@ Follow these steps carefully:
    - Matches the style of recent commits in the repository
 
 3. Run these commands in sequence:
-   - Create the commit: `jj describe -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"`
-   - Create a new working copy: `jj new`
+   - Create the commit and a new empty change with one command: `jj commit -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"`
 
-4. Verify the commit was created successfully by running `jj log -r @ --limit 2`
+4. Trust that the commit was created successfully; do not run verification commands afterwards.
 
 IMPORTANT:
 - ALWAYS use the HEREDOC format for commit messages to ensure proper formatting
 - DO NOT ask the user for confirmation - analyze the changes and create the commit
 - Keep commit messages focused and meaningful
-- After committing, always create a new working copy with `jj new`
 
 Example commit message formats:
 - "feat: add qualifying pace comparison plot"
