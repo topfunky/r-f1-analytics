@@ -1,6 +1,6 @@
 ---
 title: Commit with Jujutsu
-description: Create a commit using jj with proper message format following project guidelines
+description: Commit changes using jj with guided message formatting
 authors:
   - F1 Analytics Team
 tags:
@@ -8,6 +8,10 @@ tags:
   - version-control
   - jujutsu
 ---
+
+# Commit with Jujutsu
+
+## Details
 
 You are helping commit changes using Jujutsu (jj) version control.
 
