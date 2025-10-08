@@ -38,19 +38,46 @@ fetch_season_standings <- function(season) {
     return(NULL)
   }
 
-  print(standings)
-
   # Get only the final standings (last round) for the season
-  final_standings <- standings %>%
-    filter(round == max(round))
+  # Check if round column exists, otherwise assume we already have final standings
+  if ("round" %in% colnames(standings)) {
+    final_standings <- standings %>%
+      filter(round == max(round))
+  } else {
+    final_standings <- standings
+  }
 
   # Standardize column names
   # f1dataR uses lowercase column names: driver, constructor, points, etc.
-  result <- final_standings %>%
+  # Need to handle both constructor and constructor_id columns
+  result <- final_standings
+  
+  # Add season column if it doesn't exist
+  if (!"season" %in% colnames(result)) {
+    result$season <- season
+  }
+  
+  # Rename constructor_id to team if constructor doesn't exist
+  if ("constructor" %in% colnames(result)) {
+    result$team <- result$constructor
+  } else if ("constructor_id" %in% colnames(result)) {
+    result$team <- result$constructor_id
+  } else {
+    stop(sprintf("No constructor column found in standings for season %d", season))
+  }
+  
+  # Rename driver_id to driver if driver doesn't exist
+  if (!"driver" %in% colnames(result)) {
+    if ("driver_id" %in% colnames(result)) {
+      result$driver <- result$driver_id
+    } else {
+      stop(sprintf("No driver column found in standings for season %d", season))
+    }
+  }
+  
+  result <- result %>%
     mutate(
       season = as.integer(season),
-      team = constructor,
-      driver = driver,
       points = as.numeric(points)
     ) %>%
     select(season, driver, team, points)
