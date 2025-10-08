@@ -150,6 +150,7 @@ main <- function() {
       driver2 = last(driver),
       driver1_points = first(points),
       driver2_points = last(points),
+      difference = driver1_points - driver2_points,
       combined_points = sum(points, na.rm = TRUE),
       .groups = "drop"
     ) %>%
@@ -197,9 +198,11 @@ main <- function() {
       rank,
       season,
       team,
-      drivers,
+      driver1,
+      driver2,
       driver1_points,
       driver2_points,
+      difference,
       combined_points,
       is_mclaren_2025
     )
