@@ -7,12 +7,34 @@ cat("F1 Analytics Project Setup\n")
 cat("===========================================\n")
 cat("\n")
 
+# Detect if RSPM (RStudio Package Manager) is available for faster binary installs
+# RSPM provides precompiled binaries for Linux, significantly speeding up installation
+rspm_available <- FALSE
+if (Sys.info()["sysname"] == "Linux") {
+  rspm_url <- "https://packagemanager.rstudio.com/all/latest"
+  tryCatch({
+    con <- url(rspm_url, open = "r")
+    close(con)
+    rspm_available <- TRUE
+    cat("✓ Using RStudio Package Manager for faster binary installs\n")
+  }, error = function(e) {
+    cat("ℹ RSPM not available, using CRAN (may be slower)\n")
+  })
+}
+
+# Set repository to use RSPM if available, otherwise CRAN
+repos <- if (rspm_available) {
+  "https://packagemanager.rstudio.com/all/latest"
+} else {
+  "https://cloud.r-project.org/"
+}
+
 # Function to install package if not already installed
 install_if_missing <- function(package, repo = "CRAN") {
   if (repo == "CRAN") {
     if (!require(package, character.only = TRUE, quietly = TRUE)) {
-      cat(sprintf("Installing %s from CRAN...\n", package))
-      install.packages(package, repos = "https://cloud.r-project.org/")
+      cat(sprintf("Installing %s from %s...\n", package, if(rspm_available) "RSPM" else "CRAN"))
+      install.packages(package, repos = repos)
     } else {
       cat(sprintf("✓ %s already installed\n", package))
     }
@@ -69,21 +91,11 @@ for (pkg in viz_packages) {
 cat("\n")
 cat("Step 4: Installing HTTP/API dependencies...\n")
 
-# Workaround for curl compilation issues with old libcurl
-cat("Installing curl from archive (older compatible version)...\n")
-tryCatch({
-  # Install older version of curl that works with older libcurl
-  install.packages("https://cran.r-project.org/src/contrib/Archive/curl/curl_5.2.3.tar.gz",
-                   repos = NULL,
-                   type = "source",
-                   configure.vars = "LIB_DIR=/usr/lib/x86_64-linux-gnu INCLUDE_DIR=/usr/include")
-  cat("✓ curl 5.2.3 installed successfully\n")
-  
-  install.packages("httr2", repos = "https://cloud.r-project.org/")
-  cat("✓ httr2 installed successfully\n")
-}, error = function(e) {
-  cat(sprintf("Error installing HTTP dependencies: %s\n", e$message))
-})
+# Install curl and httr2 from precompiled binaries
+http_packages <- c("curl", "httr2")
+for (pkg in http_packages) {
+  install_if_missing(pkg)
+}
 
 cat("\n")
 cat("Step 5: Installing f1dataR from GitHub...\n")

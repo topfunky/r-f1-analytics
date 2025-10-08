@@ -40,18 +40,13 @@ jobs:
             libtiff5-dev \
             libjpeg-dev
       
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-4.3.2-${{ hashFiles('.github/workflows/build-plots.yml') }}
-          restore-keys: ${{ runner.os }}-r-4.3.2-
-      
       - name: Install R dependencies
-        run: |
-          install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr'))
-          remotes::install_github('SCasanova/f1dataR', auth_token = Sys.getenv('GITHUB_PAT'))
-        shell: Rscript {0}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            any::remotes
+            SCasanova/f1dataR
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       
