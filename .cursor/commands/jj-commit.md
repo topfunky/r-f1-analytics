@@ -36,7 +36,7 @@ Follow these steps carefully:
    - Is concise but descriptive (1-2 sentences summary, with optional bullet points for complex changes)
    - Matches the style of recent commits in the repository
 
-3. Run these commands in parallel:
+3. Run these commands in sequence:
    - Create the commit: `jj describe -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"`
    - Create a new working copy: `jj new`
 
