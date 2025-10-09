@@ -27,13 +27,13 @@ r-f1-analytics/
 
 ### R Code Style
 1. Follow tidyverse style guide for R code
-2. Use meaningful variable names (e.g., `driver_standings` not `ds`)
-3. Use snake_case for variables and functions
-4. Use pipes (`|>`) for readability
-5. Prefer tidyverse functions (dplyr, ggplot2) over base R when appropriate
-6. Add comments for complex data transformations
-7. Include roxygen2-style documentation for functions
-8. Keep functions small and focused, less than 40 lines if possible
+1. Use meaningful variable names (e.g., `driver_standings` not `ds`)
+1. Use snake_case for variables and functions
+1. Use pipes (`|>`) for readability
+1. Prefer tidyverse functions (dplyr, ggplot2) over base R when appropriate
+1. Add comments for complex data transformations
+1. Include roxygen2-style documentation for functions
+1. Keep functions small and focused, less than 40 lines if possible
 1. Allow API errors and other remote data access errors to be thrown; do not use `tryCatch`
 
 ### Markdown Style
@@ -52,27 +52,27 @@ r-f1-analytics/
 
 ### Data Fetching Best Practices
 1. Always cache f1dataR API responses to avoid repeated calls
-2. Use `f1dataR` package functions appropriately
+1. Use `f1dataR` package functions appropriately
 1. Allow R to throw errors and emit stack traces on failure so that problems can be detected and fixed
-4. Document data sources and fetch dates in comments
-5. Validate data before visualization
-6. Use rate limiting when making API calls 
+1. Document data sources and fetch dates in comments
+1. Validate data before visualization
+1. Use rate limiting when making API calls 
 
 ### Visualization Standards
 1. All plots should be saved to `plots/` directory
-2. Use consistent high contrast theme across plots (https://github.com/topfunky/gghighcontrast)
-3. Include proper titles, axis labels, and legends
-4. Export in high resolution (300+ dpi) and wide aspect ratio (12x6)
-5. Use colorblind-friendly palettes
-6. Add source attribution for data (e.g., "Data: f1dataR | Ergast API")
-7. Consider both light and dark theme compatibility
+1. Use consistent high contrast theme across plots (https://github.com/topfunky/gghighcontrast)
+1. Include proper titles, axis labels, and legends
+1. Export in high resolution (300+ dpi) and wide aspect ratio (12x6)
+1. Use colorblind-friendly palettes
+1. Add source attribution for data (e.g., "Data: f1dataR | Ergast API")
+1. Consider both light and dark theme compatibility
 
 ### Script Requirements
 1. Each script should be runnable independently
-2. Include error handling for data fetching
-3. Log progress to console
-4. Save outputs with timestamps
-5. Ensure scripts are non-interactive and reproducible (important for CI)
+1. Include error handling for data fetching
+1. Log progress to console
+1. Save outputs with timestamps
+1. Ensure scripts are non-interactive and reproducible (important for CI)
 
 ### Version Control with Jujutsu (jj)
 
@@ -84,27 +84,27 @@ r-f1-analytics/
 #### Workflow
 1. Use `jj` commands for local operations
 1. Use atomic `jj commit` to describe a change and create a new empty change
-2. Create descriptive change descriptions: `jj describe -m "Add lap time analysis for 2024 season"`
-3. Use `jj git push` to push to remote when ready
-4. Squash experimental changes before pushing to main
-5. Keep main branch clean and tested
+1. Create descriptive change descriptions: `jj describe -m "Add lap time analysis for 2024 season"`
+1. Use `jj git push` to push to remote when ready
+1. Squash experimental changes before pushing to main
+1. Keep main branch clean and tested
 
 ### Testing & Validation
 1. Verify plots render correctly before committing
-2. Test scripts with different seasons/races/drivers
-3. Handle edge cases (e.g., sprint races, DSQ, DNS, canceled races)
-4. Validate data integrity before plotting
-5. Run `scripts/render_all_plots.sh` before major commits
+1. Test scripts with different seasons/races/drivers
+1. Handle edge cases (e.g., sprint races, DSQ, DNS, canceled races)
+1. Validate data integrity before plotting
+1. Run `scripts/render_all_plots.sh` before major commits
 
 ## Common Tasks
 
 ### Adding a New Analysis
 1. Create a new R script in `scripts/`
-2. Fetch required data using `f1dataR`
-3. Perform analysis/transformation
-4. Generate visualization
-5. Save plot to `plots/`
-6. Update README with new analysis description
+1. Fetch required data using `f1dataR`
+1. Perform analysis/transformation
+1. Generate visualization
+1. Save plot to `plots/`
+1. Update README with new analysis description
 
 ### Running All Plots
 ```bash
@@ -185,8 +185,8 @@ ggsave(
 ### API Rate Limits
 If you hit API rate limits:
 1. Use cached data when available
-2. Add delays between requests
-3. Run scripts during off-peak hours
+1. Add delays between requests
+1. Run scripts during off-peak hours
 
 ### Package Installation Issues
 If f1dataR installation fails:
@@ -198,18 +198,18 @@ remotes::install_github("SCasanova/f1dataR", force = TRUE)
 
 ### Plot Rendering Issues
 1. Check that output directory exists
-2. Verify system graphics libraries are installed
-3. Use `Rscript` instead of interactive R for consistent results
+1. Verify system graphics libraries are installed
+1. Use `Rscript` instead of interactive R for consistent results
 
 ## AI Agent Behavior Expectations
 
 ### Core Principles
 1. **Be Proactive**: Suggest relevant analyses based on recent F1 events
-2. **Explain Decisions**: Comment why certain visualizations or statistics are chosen
-3. **Optimize Performance**: Cache data, vectorize operations, use efficient ggplot2 patterns
-4. **Maintain Quality**: Generate publication-ready plots with proper styling
-5. **Stay Current**: Use latest F1 season data when available
-6. **Document Everything**: Add comments, update README, log changes
+1. **Explain Decisions**: Comment why certain visualizations or statistics are chosen
+1. **Optimize Performance**: Cache data, vectorize operations, use efficient ggplot2 patterns
+1. **Maintain Quality**: Generate publication-ready plots with proper styling
+1. **Stay Current**: Use latest F1 season data when available
+1. **Document Everything**: Add comments, update README, log changes
 
 ### Code Generation
 - Suggest analyses based on recent F1 events
