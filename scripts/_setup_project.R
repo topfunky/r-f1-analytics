@@ -105,8 +105,9 @@ for (pkg in http_packages) {
 }
 
 cat("\n")
-cat("Step 5: Installing f1dataR from GitHub...\n")
+cat("Step 5: Installing GitHub packages...\n")
 install_if_missing("SCasanova/f1dataR", repo = "GitHub")
+install_if_missing("topfunky/gghighcontrast", repo = "GitHub")
 
 cat("\n")
 cat("Step 6: Creating project directories...\n")

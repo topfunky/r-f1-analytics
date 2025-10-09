@@ -144,11 +144,12 @@ saveRDS(data, "data/cache/cached_data.rds")
 ### Plot Template
 ```r
 library(ggplot2)
+library(gghighcontrast)
 
 # Create plot
 p <- ggplot(data, aes(x = x, y = y)) +
   geom_point() +
-  theme_minimal() +
+  theme_high_contrast() +
   labs(
     title = "Descriptive Title",
     subtitle = "Additional context",

@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(readr)
   library(scales)
+  library(gghighcontrast)
 })
 
 # Configuration
@@ -58,7 +59,7 @@ main <- function() {
       y = "Total Points",
       fill = "Constructor"
     ) +
-    theme_minimal() +
+    theme_high_contrast() +
     theme(
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
@@ -96,7 +97,7 @@ main <- function() {
       y = "Cumulative Points",
       color = "Driver"
     ) +
-    theme_minimal() +
+    theme_high_contrast() +
     theme(legend.position = "bottom")
 
   ggsave(
@@ -135,7 +136,7 @@ main <- function() {
       y = "Total Points",
       fill = "Season"
     ) +
-    theme_minimal() +
+    theme_high_contrast() +
     theme(legend.position = "bottom")
 
   ggsave(
@@ -164,7 +165,7 @@ main <- function() {
       y = "New Points (Post-2010 System)",
       color = "Constructor"
     ) +
-    theme_minimal() +
+    theme_high_contrast() +
     theme(legend.position = "bottom")
 
   ggsave(
@@ -205,7 +206,7 @@ main <- function() {
       y = "Count",
       fill = "Season"
     ) +
-    theme_minimal() +
+    theme_high_contrast() +
     theme(legend.position = "bottom")
 
   ggsave(
