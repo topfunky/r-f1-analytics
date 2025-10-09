@@ -51,21 +51,24 @@ fetch_season_standings <- function(season) {
   # f1dataR uses lowercase column names: driver, constructor, points, etc.
   # Need to handle both constructor and constructor_id columns
   result <- final_standings
-  
+
   # Add season column if it doesn't exist
   if (!"season" %in% colnames(result)) {
     result$season <- season
   }
-  
+
   # Rename constructor_id to team if constructor doesn't exist
   if ("constructor" %in% colnames(result)) {
     result$team <- result$constructor
   } else if ("constructor_id" %in% colnames(result)) {
     result$team <- result$constructor_id
   } else {
-    stop(sprintf("No constructor column found in standings for season %d", season))
+    stop(sprintf(
+      "No constructor column found in standings for season %d",
+      season
+    ))
   }
-  
+
   # Rename driver_id to driver if driver doesn't exist
   if (!"driver" %in% colnames(result)) {
     if ("driver_id" %in% colnames(result)) {
@@ -74,7 +77,7 @@ fetch_season_standings <- function(season) {
       stop(sprintf("No driver column found in standings for season %d", season))
     }
   }
-  
+
   result <- result %>%
     mutate(
       season = as.integer(season),

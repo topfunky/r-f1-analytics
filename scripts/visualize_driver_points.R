@@ -14,7 +14,10 @@ OUTPUT_DIR <- "plots"
 
 # Read the data
 race_points <- read_csv(file.path(OUTPUT_DIR, "driver_points_race_by_race.csv"))
-cumulative_points <- read_csv(file.path(OUTPUT_DIR, "driver_points_cumulative.csv"))
+cumulative_points <- read_csv(file.path(
+  OUTPUT_DIR,
+  "driver_points_cumulative.csv"
+))
 
 # Main visualization function
 main <- function() {
@@ -23,10 +26,10 @@ main <- function() {
   cat("F1 Driver Points Visualizations\n")
   cat("===========================================================\n")
   cat("\n")
-  
+
   # 1. Championship standings comparison (new vs original scoring)
   cat("Creating championship standings comparison...\n")
-  
+
   # Get final standings for each season
   final_standings <- cumulative_points %>%
     group_by(season, driver_id, driver_name, constructor_name) %>%
@@ -39,7 +42,7 @@ main <- function() {
     arrange(desc(new_points)) %>%
     mutate(rank = row_number()) %>%
     ungroup()
-  
+
   # Plot 1: Championship standings comparison
   p1 <- final_standings %>%
     filter(rank <= 10) %>%
@@ -61,23 +64,29 @@ main <- function() {
       axis.ticks.x = element_blank(),
       legend.position = "bottom"
     )
-  
-  ggsave(file.path(OUTPUT_DIR, "championship_standings.png"), p1, width = 12, height = 8, dpi = 300)
+
+  ggsave(
+    file.path(OUTPUT_DIR, "championship_standings.png"),
+    p1,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
   cat("✓ Championship standings plot saved\n")
-  
+
   # 2. Points progression over season
   cat("Creating points progression plot...\n")
-  
+
   # Get top 5 drivers for each season
   top_drivers <- final_standings %>%
     group_by(season) %>%
     slice_head(n = 5) %>%
     pull(driver_id)
-  
+
   p2 <- cumulative_points %>%
     filter(driver_id %in% top_drivers) %>%
     ggplot(aes(x = round, y = cumulative_points, color = driver_name)) +
-    geom_line(size = 1) +
+    geom_line(linewidth = 1) +
     geom_point(size = 2) +
     facet_wrap(~season, scales = "free_x") +
     labs(
@@ -89,13 +98,19 @@ main <- function() {
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
-  
-  ggsave(file.path(OUTPUT_DIR, "points_progression.png"), p2, width = 12, height = 8, dpi = 300)
+
+  ggsave(
+    file.path(OUTPUT_DIR, "points_progression.png"),
+    p2,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
   cat("✓ Points progression plot saved\n")
-  
+
   # 3. Constructor comparison
   cat("Creating constructor comparison plot...\n")
-  
+
   constructor_totals <- final_standings %>%
     group_by(season, constructor_name) %>%
     summarise(
@@ -107,7 +122,7 @@ main <- function() {
     arrange(desc(total_points)) %>%
     slice_head(n = 8) %>%
     ungroup()
-  
+
   p3 <- constructor_totals %>%
     ggplot(aes(x = reorder(constructor_name, total_points), y = total_points)) +
     geom_col(aes(fill = as.factor(season)), position = "dodge", alpha = 0.8) +
@@ -122,13 +137,19 @@ main <- function() {
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
-  
-  ggsave(file.path(OUTPUT_DIR, "constructor_comparison.png"), p3, width = 12, height = 8, dpi = 300)
+
+  ggsave(
+    file.path(OUTPUT_DIR, "constructor_comparison.png"),
+    p3,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
   cat("✓ Constructor comparison plot saved\n")
-  
+
   # 4. Scoring system comparison
   cat("Creating scoring system comparison plot...\n")
-  
+
   p4 <- final_standings %>%
     filter(rank <= 10) %>%
     ggplot(aes(x = original_points, y = new_points)) +
@@ -145,20 +166,38 @@ main <- function() {
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
-  
-  ggsave(file.path(OUTPUT_DIR, "scoring_comparison.png"), p4, width = 12, height = 8, dpi = 300)
+
+  ggsave(
+    file.path(OUTPUT_DIR, "scoring_comparison.png"),
+    p4,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
   cat("✓ Scoring system comparison plot saved\n")
-  
+
   # 5. Race-by-race points distribution
   cat("Creating race points distribution plot...\n")
-  
+
   p5 <- race_points %>%
     filter(new_points > 0) %>%
     ggplot(aes(x = as.factor(new_points))) +
     geom_bar(aes(fill = as.factor(season)), position = "dodge", alpha = 0.8) +
     facet_wrap(~season) +
-    scale_x_discrete(labels = c("1" = "1st", "2" = "2nd", "3" = "3rd", "4" = "4th", "5" = "5th",
-                               "6" = "6th", "7" = "7th", "8" = "8th", "9" = "9th", "10" = "10th")) +
+    scale_x_discrete(
+      labels = c(
+        "1" = "1st",
+        "2" = "2nd",
+        "3" = "3rd",
+        "4" = "4th",
+        "5" = "5th",
+        "6" = "6th",
+        "7" = "7th",
+        "8" = "8th",
+        "9" = "9th",
+        "10" = "10th"
+      )
+    ) +
     labs(
       title = "Race Points Distribution",
       subtitle = "Number of times each points value was awarded",
@@ -168,10 +207,16 @@ main <- function() {
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
-  
-  ggsave(file.path(OUTPUT_DIR, "points_distribution.png"), p5, width = 12, height = 8, dpi = 300)
+
+  ggsave(
+    file.path(OUTPUT_DIR, "points_distribution.png"),
+    p5,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
   cat("✓ Race points distribution plot saved\n")
-  
+
   cat("\n")
   cat("===========================================================\n")
   cat("Visualizations complete!\n")

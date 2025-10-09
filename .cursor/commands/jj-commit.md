@@ -37,6 +37,7 @@ Follow these steps carefully:
    - Matches the style of recent commits in the repository
 
 3. Run these commands in sequence:
+   - Run `make format` to format all R script files consistently
    - Create the commit and a new empty change with one command: `jj commit -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"`
 
 4. Trust that the commit was created successfully; do not run verification commands afterwards.

@@ -12,14 +12,17 @@ cat("\n")
 rspm_available <- FALSE
 if (Sys.info()["sysname"] == "Linux") {
   rspm_url <- "https://cran4linux.github.io/rspm/"
-  tryCatch({
-    con <- url(rspm_url, open = "r")
-    close(con)
-    rspm_available <- TRUE
-    cat("✓ Using cran4linux RSPM for precompiled binary packages\n")
-  }, error = function(e) {
-    cat("ℹ cran4linux RSPM not available, using CRAN (may be slower)\n")
-  })
+  tryCatch(
+    {
+      con <- url(rspm_url, open = "r")
+      close(con)
+      rspm_available <- TRUE
+      cat("✓ Using cran4linux RSPM for precompiled binary packages\n")
+    },
+    error = function(e) {
+      cat("ℹ cran4linux RSPM not available, using CRAN (may be slower)\n")
+    }
+  )
 }
 
 # Set repository to use cran4linux RSPM if available, otherwise CRAN
@@ -33,7 +36,11 @@ repos <- if (rspm_available) {
 install_if_missing <- function(package, repo = "CRAN") {
   if (repo == "CRAN") {
     if (!require(package, character.only = TRUE, quietly = TRUE)) {
-      cat(sprintf("Installing %s from %s...\n", package, if(rspm_available) "cran4linux RSPM" else "CRAN"))
+      cat(sprintf(
+        "Installing %s from %s...\n",
+        package,
+        if (rspm_available) "cran4linux RSPM" else "CRAN"
+      ))
       install.packages(package, repos = repos)
     } else {
       cat(sprintf("✓ %s already installed\n", package))
