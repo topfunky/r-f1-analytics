@@ -27,12 +27,25 @@ if [ ! -d "data/cache" ]; then
     mkdir -p data/cache
 fi
 
-# Find all R scripts in the scripts directory (excluding this shell script)
+# Define script categories and dependencies
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-R_SCRIPTS=$(find "$SCRIPT_DIR" -maxdepth 1 -name "*.R" -type f | sort)
+
+# Data gathering scripts (must run first)
+DATA_SCRIPTS=(
+    "calculate_driver_points_robust.R"
+)
+
+# Analysis scripts (depend on data gathering)
+ANALYSIS_SCRIPTS=(
+    "analyze_driver_points.R"
+    "visualize_driver_points.R"
+)
+
+# Other scripts (no dependencies)
+OTHER_SCRIPTS=$(find "$SCRIPT_DIR" -maxdepth 1 -name "*.R" -type f | grep -v -E "$(printf '%s|' "${DATA_SCRIPTS[@]}" "${ANALYSIS_SCRIPTS[@]}")" | sort)
 
 # Count total scripts
-TOTAL_SCRIPTS=$(echo "$R_SCRIPTS" | grep -c "^" || echo "0")
+TOTAL_SCRIPTS=$((${#DATA_SCRIPTS[@]} + ${#ANALYSIS_SCRIPTS[@]} + $(echo "$OTHER_SCRIPTS" | grep -c "^" || echo "0")))
 
 if [ "$TOTAL_SCRIPTS" -eq 0 ]; then
     echo -e "${YELLOW}No R scripts found in scripts/ directory${NC}"
@@ -41,32 +54,73 @@ if [ "$TOTAL_SCRIPTS" -eq 0 ]; then
 fi
 
 echo -e "Found ${GREEN}${TOTAL_SCRIPTS}${NC} R script(s) to run"
+echo -e "  - Data gathering: ${GREEN}${#DATA_SCRIPTS[@]}${NC}"
+echo -e "  - Analysis: ${GREEN}${#ANALYSIS_SCRIPTS[@]}${NC}"
+echo -e "  - Other: ${GREEN}$(echo "$OTHER_SCRIPTS" | grep -c "^" || echo "0")${NC}"
 echo ""
 
 # Track results
 SUCCESS_COUNT=0
 FAIL_COUNT=0
 FAILED_SCRIPTS=()
-
-# Run each R script
 CURRENT=0
-for script in $R_SCRIPTS; do
-    CURRENT=$((CURRENT + 1))
-    SCRIPT_NAME=$(basename "$script")
+
+# Function to run a script
+run_script() {
+    local script_path="$1"
+    local script_name=$(basename "$script_path")
     
-    echo -e "${BLUE}[${CURRENT}/${TOTAL_SCRIPTS}]${NC} Running ${GREEN}${SCRIPT_NAME}${NC}..."
+    CURRENT=$((CURRENT + 1))
+    echo -e "${BLUE}[${CURRENT}/${TOTAL_SCRIPTS}]${NC} Running ${GREEN}${script_name}${NC}..."
     
     # Run the R script and capture output
-    if Rscript "$script" 2>&1; then
-        echo -e "${GREEN}✓${NC} ${SCRIPT_NAME} completed successfully"
+    if Rscript "$script_path" 2>&1; then
+        echo -e "${GREEN}✓${NC} ${script_name} completed successfully"
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        return 0
     else
-        echo -e "${RED}✗${NC} ${SCRIPT_NAME} failed"
+        echo -e "${RED}✗${NC} ${script_name} failed"
         FAIL_COUNT=$((FAIL_COUNT + 1))
-        FAILED_SCRIPTS+=("$SCRIPT_NAME")
+        FAILED_SCRIPTS+=("$script_name")
+        return 1
     fi
-    echo ""
+}
+
+# 1. Run data gathering scripts first
+echo -e "${YELLOW}Phase 1: Data Gathering${NC}"
+echo -e "${YELLOW}========================${NC}"
+for script in "${DATA_SCRIPTS[@]}"; do
+    script_path="$SCRIPT_DIR/$script"
+    if [ -f "$script_path" ]; then
+        run_script "$script_path"
+        echo ""
+    else
+        echo -e "${YELLOW}Warning: Data script $script not found, skipping...${NC}"
+    fi
 done
+
+# 2. Run analysis scripts (depend on data gathering)
+echo -e "${YELLOW}Phase 2: Analysis${NC}"
+echo -e "${YELLOW}=================${NC}"
+for script in "${ANALYSIS_SCRIPTS[@]}"; do
+    script_path="$SCRIPT_DIR/$script"
+    if [ -f "$script_path" ]; then
+        run_script "$script_path"
+        echo ""
+    else
+        echo -e "${YELLOW}Warning: Analysis script $script not found, skipping...${NC}"
+    fi
+done
+
+# 3. Run other scripts
+if [ -n "$OTHER_SCRIPTS" ]; then
+    echo -e "${YELLOW}Phase 3: Other Scripts${NC}"
+    echo -e "${YELLOW}======================${NC}"
+    for script in $OTHER_SCRIPTS; do
+        run_script "$script"
+        echo ""
+    done
+fi
 
 # Summary
 echo -e "${BLUE}========================================${NC}"
