@@ -13,7 +13,6 @@ r-f1-analytics/
 ├── data/             # Cached data files (gitignored)
 ├── .github/          # GitHub Actions workflows
 ├── AGENTS.md         # This file - AI agent guidelines
-├── .cursorrules      # Cursor AI configuration (references this file)
 └── README.md         # Project documentation
 ```
 
@@ -26,15 +25,19 @@ r-f1-analytics/
 
 ## Development Guidelines
 
-### Code Style
+### R Code Style
 1. Follow tidyverse style guide for R code
 2. Use meaningful variable names (e.g., `driver_standings` not `ds`)
 3. Use snake_case for variables and functions
-4. Use pipes (`%>%` or `|>`) for readability
+4. Use pipes (`|>`) for readability
 5. Prefer tidyverse functions (dplyr, ggplot2) over base R when appropriate
 6. Add comments for complex data transformations
 7. Include roxygen2-style documentation for functions
-8. Keep functions small and focused
+8. Keep functions small and focused, less than 40 lines if possible
+1. Allow API errors and other remote data access errors to be thrown; do not use `tryCatch`
+
+### Markdown Style
+1. Use `1.` for all ordered lists; do not number items sequentially 
 
 ### File Naming Conventions
 - Scripts: `verb_subject.R` (e.g., `plot_lap_times.R`, `analyze_race_results.R`)
@@ -50,16 +53,16 @@ r-f1-analytics/
 ### Data Fetching Best Practices
 1. Always cache f1dataR API responses to avoid repeated calls
 2. Use `f1dataR` package functions appropriately
-3. Handle missing data gracefully with informative error messages
+1. Allow R to throw errors and emit stack traces on failure so that problems can be detected and fixed
 4. Document data sources and fetch dates in comments
 5. Validate data before visualization
-6. Don't make API calls in loops without rate limiting
+6. Use rate limiting when making API calls 
 
 ### Visualization Standards
 1. All plots should be saved to `plots/` directory
-2. Use consistent theme across plots (theme_minimal() or custom theme)
+2. Use consistent high contrast theme across plots (https://github.com/topfunky/gghighcontrast)
 3. Include proper titles, axis labels, and legends
-4. Export in high resolution (300+ dpi)
+4. Export in high resolution (300+ dpi) and wide aspect ratio (12x6)
 5. Use colorblind-friendly palettes
 6. Add source attribution for data (e.g., "Data: f1dataR | Ergast API")
 7. Consider both light and dark theme compatibility
@@ -80,6 +83,7 @@ r-f1-analytics/
 
 #### Workflow
 1. Use `jj` commands for local operations
+1. Use atomic `jj commit` to describe a change and create a new empty change
 2. Create descriptive change descriptions: `jj describe -m "Add lap time analysis for 2024 season"`
 3. Use `jj git push` to push to remote when ready
 4. Squash experimental changes before pushing to main
@@ -132,18 +136,9 @@ remotes::install_github("SCasanova/f1dataR")
 library(f1dataR)
 library(dplyr)
 
-# Fetch data with error handling
-tryCatch({
-  data <- load_some_f1_data(season = 2024)
-  saveRDS(data, "data/cache/cached_data.rds")
-}, error = function(e) {
-  if (file.exists("data/cache/cached_data.rds")) {
-    data <- readRDS("data/cache/cached_data.rds")
-    message("Using cached data due to API error")
-  } else {
-    stop("Could not fetch data and no cache available")
-  }
-})
+# Fetch data without error handling so that errors are raised and can be fixed
+data <- load_some_f1_data(season = 2024)
+saveRDS(data, "data/cache/cached_data.rds")
 ```
 
 ### Plot Template
@@ -166,7 +161,7 @@ p <- ggplot(data, aes(x = x, y = y)) +
 ggsave(
   filename = "plots/descriptive_name.png",
   plot = p,
-  width = 10,
+  width = 12,
   height = 6,
   dpi = 300
 )
@@ -183,7 +178,6 @@ ggsave(
 - ❌ Don't commit large data files (use .gitignore)
 - ❌ Don't make API calls in loops without rate limiting
 - ❌ Don't use absolute file paths (use relative paths)
-- ❌ Don't generate plots without proper error handling
 - ❌ Don't push to main without testing scripts
 
 ## Troubleshooting
@@ -231,6 +225,7 @@ remotes::install_github("SCasanova/f1dataR", force = TRUE)
 - **ggplot2 Documentation**: https://ggplot2.tidyverse.org/
 - **Tidyverse Style Guide**: https://www.tidyverse.org/
 - **Jujutsu VCS**: https://github.com/martinvonz/jj
+- **High Contrast Theme**: https://github.com/topfunky/gghighcontrast
 
 ## Contact & Contribution
 This project uses AI agents for development. All changes should be well-documented and tested before committing.

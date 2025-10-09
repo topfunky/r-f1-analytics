@@ -3,15 +3,4 @@
 > **Note**: All comprehensive guidelines are maintained in `AGENTS.md`.
 > Please refer to that file for complete development guidelines, code templates, and best practices.
 
-## Quick Reference
 
-This project follows the guidelines specified in `AGENTS.md`. Key points:
-
-- **Language**: R with tidyverse style
-- **Version Control**: Jujutsu (jj) for local, git for remote
-- **Key Package**: f1dataR for Formula 1 data
-- **Code Style**: snake_case, pipes (`|>` or `%>%`), meaningful names
-- **File Organization**: Scripts in `scripts/`, plots in `plots/`, data cached in `data/`
-- **Best Practices**: Cache API calls, handle errors, test with multiple scenarios
-
-For detailed information, see `AGENTS.md`.
