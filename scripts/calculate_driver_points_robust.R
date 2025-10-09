@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 })
 
 # Configuration
-START_YEAR <- 2020
+START_YEAR <- 2022
 END_YEAR <- 2022
 CACHE_DIR <- "data/cache"
 OUTPUT_DIR <- "plots"
@@ -40,41 +40,33 @@ fetch_race_results_with_retry <- function(season, round, max_retries = MAX_RETRI
   
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
-    tryCatch({
-      results <- load_results(season = season, round = round)
-      
-      # Check if we got valid data
-      if (is.null(results) || !is.data.frame(results) || nrow(results) == 0) {
-        if (attempt == max_retries) {
-          return(NULL)
-        }
-        next
-      }
-      
-      # Process and standardize the data
-      processed_results <- results %>%
-        mutate(
-          season = as.integer(season),
-          round = as.integer(round),
-          position = as.integer(position),
-          points = as.numeric(points),
-          driver_id = as.character(driver_id),
-          constructor_id = as.character(constructor_id)
-        ) %>%
-        select(season, round, driver_id, constructor_id, position, points, status)
-      
-      # Save to cache
-      saveRDS(processed_results, cache_file)
-      return(processed_results)
-      
-    }, error = function(e) {
+    results <- load_results(season = season, round = round)
+    
+    # Check if we got valid data
+    if (is.null(results) || !is.data.frame(results) || nrow(results) == 0) {
       if (attempt == max_retries) {
-        cat(sprintf("  Failed to fetch race %d after %d attempts: %s\n", round, max_retries, e$message))
         return(NULL)
       }
       cat(sprintf("  Attempt %d failed for race %d, retrying in %d seconds...\n", attempt, round, RETRY_DELAY))
       Sys.sleep(RETRY_DELAY)
-    })
+      next
+    }
+    
+    # Process and standardize the data
+    processed_results <- results %>%
+      mutate(
+        season = as.integer(season),
+        round = as.integer(round),
+        position = as.integer(position),
+        points = as.numeric(points),
+        driver_id = as.character(driver_id),
+        constructor_id = as.character(constructor_id)
+      ) %>%
+      select(season, round, driver_id, constructor_id, position, points, status)
+    
+    # Save to cache
+    saveRDS(processed_results, cache_file)
+    return(processed_results)
   }
   
   return(NULL)
@@ -91,36 +83,28 @@ get_season_races_with_retry <- function(season, max_retries = MAX_RETRIES) {
   
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
-    tryCatch({
-      schedule <- load_schedule(season = season)
-      
-      if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
-        if (attempt == max_retries) {
-          return(NULL)
-        }
-        next
-      }
-      
-      # Get unique rounds
-      races <- schedule %>%
-        select(round) %>%
-        distinct() %>%
-        mutate(round = as.integer(round)) %>%
-        arrange(round) %>%
-        pull(round)
-      
-      # Save to cache
-      saveRDS(races, cache_file)
-      return(races)
-      
-    }, error = function(e) {
+    schedule <- load_schedule(season = season)
+    
+    if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
       if (attempt == max_retries) {
-        cat(sprintf("  Failed to fetch schedule for season %d after %d attempts: %s\n", season, max_retries, e$message))
         return(NULL)
       }
       cat(sprintf("  Attempt %d failed for season %d schedule, retrying in %d seconds...\n", attempt, season, RETRY_DELAY))
       Sys.sleep(RETRY_DELAY)
-    })
+      next
+    }
+    
+    # Get unique rounds
+    races <- schedule %>%
+      select(round) %>%
+      distinct() %>%
+      mutate(round = as.integer(round)) %>%
+      arrange(round) %>%
+      pull(round)
+    
+    # Save to cache
+    saveRDS(races, cache_file)
+    return(races)
   }
   
   return(NULL)
@@ -137,34 +121,26 @@ get_driver_names_with_retry <- function(season, max_retries = MAX_RETRIES) {
   
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
-    tryCatch({
-      drivers <- load_drivers(season = season)
-      
-      if (is.null(drivers) || !is.data.frame(drivers) || nrow(drivers) == 0) {
-        if (attempt == max_retries) {
-          return(NULL)
-        }
-        next
-      }
-      
-      # Process driver data
-      driver_names <- drivers %>%
-        mutate(driver_name = paste(given_name, family_name)) %>%
-        select(driver_id, driver_name) %>%
-        distinct()
-      
-      # Save to cache
-      saveRDS(driver_names, cache_file)
-      return(driver_names)
-      
-    }, error = function(e) {
+    drivers <- load_drivers(season = season)
+    
+    if (is.null(drivers) || !is.data.frame(drivers) || nrow(drivers) == 0) {
       if (attempt == max_retries) {
-        cat(sprintf("  Failed to fetch drivers for season %d after %d attempts: %s\n", season, max_retries, e$message))
         return(NULL)
       }
       cat(sprintf("  Attempt %d failed for season %d drivers, retrying in %d seconds...\n", attempt, season, RETRY_DELAY))
       Sys.sleep(RETRY_DELAY)
-    })
+      next
+    }
+    
+    # Process driver data
+    driver_names <- drivers %>%
+      mutate(driver_name = paste(given_name, family_name)) %>%
+      select(driver_id, driver_name) %>%
+      distinct()
+    
+    # Save to cache
+    saveRDS(driver_names, cache_file)
+    return(driver_names)
   }
   
   return(NULL)
@@ -181,33 +157,25 @@ get_constructor_names_with_retry <- function(season, max_retries = MAX_RETRIES) 
   
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
-    tryCatch({
-      constructors <- load_constructors()
-      
-      if (is.null(constructors) || !is.data.frame(constructors) || nrow(constructors) == 0) {
-        if (attempt == max_retries) {
-          return(NULL)
-        }
-        next
-      }
-      
-      # Process constructor data
-      constructor_names <- constructors %>%
-        select(constructor_id, constructor_name = name) %>%
-        distinct()
-      
-      # Save to cache
-      saveRDS(constructor_names, cache_file)
-      return(constructor_names)
-      
-    }, error = function(e) {
+    constructors <- load_constructors()
+    
+    if (is.null(constructors) || !is.data.frame(constructors) || nrow(constructors) == 0) {
       if (attempt == max_retries) {
-        cat(sprintf("  Failed to fetch constructors for season %d after %d attempts: %s\n", season, max_retries, e$message))
         return(NULL)
       }
       cat(sprintf("  Attempt %d failed for season %d constructors, retrying in %d seconds...\n", attempt, season, RETRY_DELAY))
       Sys.sleep(RETRY_DELAY)
-    })
+      next
+    }
+    
+    # Process constructor data
+    constructor_names <- constructors %>%
+      select(constructor_id, constructor_name = name) %>%
+      distinct()
+    
+    # Save to cache
+    saveRDS(constructor_names, cache_file)
+    return(constructor_names)
   }
   
   return(NULL)
