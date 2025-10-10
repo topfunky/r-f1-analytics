@@ -7,7 +7,12 @@ suppressPackageStartupMessages({
   library(f1dataR)
   library(dplyr)
   library(tidyr)
+  library(ggplot2)
+  library(gghighcontrast)
 })
+
+# Load color utility functions
+source("scripts/color_utils.R")
 
 # Configuration
 START_YEAR <- 2003
@@ -272,6 +277,57 @@ main <- function() {
     row.names = FALSE
   )
   cat(sprintf("✓ Results saved to: %s\n", output_file))
+
+  # Step 6: Create visualization
+  cat("\nStep 6: Creating visualization...\n")
+
+  # Create a plot showing top team pairs by combined points
+  top_team_pairs <- team_pairs %>%
+    slice_head(n = 20) %>%
+    mutate(
+      team_display = sprintf("%s (%d)", team, season),
+      is_mclaren_2025 = (season == 2025 & grepl("mclaren", tolower(team)))
+    )
+
+  p <- top_team_pairs %>%
+    ggplot(aes(
+      x = reorder(team_display, combined_points),
+      y = combined_points
+    )) +
+    geom_col(aes(fill = team), alpha = 0.8) +
+    geom_text(
+      aes(label = sprintf("%.0f", combined_points)),
+      hjust = -0.1,
+      size = 3
+    ) +
+    coord_flip() +
+    labs(
+      title = "Top 20 F1 Team Pairs by Combined Championship Points",
+      subtitle = "Historical comparison of driver pairings",
+      x = "Team & Season",
+      y = "Combined Points",
+      fill = "Team",
+      caption = "Data: f1dataR | Ergast API"
+    ) +
+    theme_high_contrast() +
+    theme(
+      legend.position = "bottom",
+      axis.text.y = element_text(size = 8)
+    )
+
+  # Apply team colors
+  p <- apply_team_colors(p, season = "current", team_col = "team")
+
+  # Save the plot
+  plot_file <- file.path(OUTPUT_DIR, "team_pairs_visualization.png")
+  ggsave(
+    plot_file,
+    p,
+    width = 14,
+    height = 10,
+    dpi = 300
+  )
+  cat(sprintf("✓ Visualization saved to: %s\n", plot_file))
 
   cat("\n")
   cat("===========================================================\n")

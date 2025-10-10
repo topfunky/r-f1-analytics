@@ -10,6 +10,9 @@ suppressPackageStartupMessages({
   library(gghighcontrast)
 })
 
+# Load color utility functions
+source("scripts/color_utils.R")
+
 # Configuration
 OUTPUT_DIR <- "plots"
 
@@ -66,6 +69,9 @@ main <- function() {
       legend.position = "bottom"
     )
 
+  # Apply team colors
+  p1 <- apply_team_colors(p1, season = "current", team_col = "constructor_name")
+
   ggsave(
     file.path(OUTPUT_DIR, "championship_standings.png"),
     p1,
@@ -100,6 +106,9 @@ main <- function() {
     theme_high_contrast() +
     theme(legend.position = "bottom")
 
+  # Apply driver colors
+  p2 <- apply_driver_colors(p2, season = "current", driver_col = "driver_name")
+
   ggsave(
     file.path(OUTPUT_DIR, "points_progression.png"),
     p2,
@@ -126,7 +135,7 @@ main <- function() {
 
   p3 <- constructor_totals %>%
     ggplot(aes(x = reorder(constructor_name, total_points), y = total_points)) +
-    geom_col(aes(fill = as.factor(season)), position = "dodge", alpha = 0.8) +
+    geom_col(aes(fill = constructor_name), position = "dodge", alpha = 0.8) +
     coord_flip() +
     facet_wrap(~season, scales = "free_y") +
     labs(
@@ -134,10 +143,13 @@ main <- function() {
       subtitle = "Total points by constructor",
       x = "Constructor",
       y = "Total Points",
-      fill = "Season"
+      fill = "Constructor"
     ) +
     theme_high_contrast() +
     theme(legend.position = "bottom")
+
+  # Apply team colors
+  p3 <- apply_team_colors(p3, season = "current", team_col = "constructor_name")
 
   ggsave(
     file.path(OUTPUT_DIR, "constructor_comparison.png"),
@@ -167,6 +179,9 @@ main <- function() {
     ) +
     theme_high_contrast() +
     theme(legend.position = "bottom")
+
+  # Apply team colors
+  p4 <- apply_team_colors(p4, season = "current", team_col = "constructor_name")
 
   ggsave(
     file.path(OUTPUT_DIR, "scoring_comparison.png"),
