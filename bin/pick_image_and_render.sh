@@ -26,4 +26,6 @@ if [ ! -d "plots" ] || [ -z "$(ls plots/*.png 2>/dev/null)" ]; then
 fi
 
 # Run the command to filter and display images
-imgcat $(ls plots/*.png | gum filter)
+chosen_img=$(ls plots/*.png | gum filter)
+echo "Displaying ${chosen_img}"
+imgcat ${chosen_img}
