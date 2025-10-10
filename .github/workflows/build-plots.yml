@@ -51,7 +51,9 @@ jobs:
           cache-version: 2
           extra-packages: |
             any::remotes
+            any::tidyr
             SCasanova/f1dataR
+            topfunky/gghighcontrast
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       
