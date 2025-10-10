@@ -16,7 +16,6 @@ This analysis calculates individual driver points using the post-2010 scoring sy
 - `points_progression.png` - Points progression over the season
 - `constructor_comparison.png` - Constructor championship points
 - `scoring_comparison.png` - Original vs new scoring system comparison
-- `points_distribution.png` - Distribution of points awarded
 
 ### Scripts
 - `calculate_driver_points.R` - Main calculation script

@@ -192,47 +192,6 @@ main <- function() {
   )
   cat("✓ Scoring system comparison plot saved\n")
 
-  # 5. Race-by-race points distribution
-  cat("Creating race points distribution plot...\n")
-
-  p5 <- race_points %>%
-    filter(new_points > 0) %>%
-    ggplot(aes(x = as.factor(new_points))) +
-    geom_bar(aes(fill = as.factor(season)), position = "dodge", alpha = 0.8) +
-    facet_wrap(~season) +
-    scale_x_discrete(
-      labels = c(
-        "1" = "1st",
-        "2" = "2nd",
-        "3" = "3rd",
-        "4" = "4th",
-        "5" = "5th",
-        "6" = "6th",
-        "7" = "7th",
-        "8" = "8th",
-        "9" = "9th",
-        "10" = "10th"
-      )
-    ) +
-    labs(
-      title = "Race Points Distribution",
-      subtitle = "Number of times each points value was awarded",
-      x = "Points Awarded",
-      y = "Count",
-      fill = "Season"
-    ) +
-    theme_high_contrast() +
-    theme(legend.position = "bottom")
-
-  ggsave(
-    file.path(OUTPUT_DIR, "points_distribution.png"),
-    p5,
-    width = 12,
-    height = 8,
-    dpi = 300
-  )
-  cat("✓ Race points distribution plot saved\n")
-
   cat("\n")
   cat("===========================================================\n")
   cat("Visualizations complete!\n")
@@ -243,7 +202,6 @@ main <- function() {
   cat("  - points_progression.png\n")
   cat("  - constructor_comparison.png\n")
   cat("  - scoring_comparison.png\n")
-  cat("  - points_distribution.png\n")
   cat("\n")
 }
 
