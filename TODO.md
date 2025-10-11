@@ -1,5 +1,12 @@
 # TODO
 
+- Optimize GitHub Action to use cached f1 data between runs
+- Use Google Fonts https://www.geeksforgeeks.org/r-language/how-to-implement-google-fonts-in-ggplot2-graphs-using-r/
+- Use historical re-calculation of scores when comparing driver pair performance across seasons
+- Use weighted 24 season score for short seasons and seasons in process when comparing driver pair performance 
+
+## Brief API Reference
+
 Refer to https://cran.csail.mit.edu/web/packages/f1dataR/readme/README.html for API details.
 
 Utility functions in f1dataR
@@ -36,14 +43,3 @@ load_sprint(season = "current", round = "last")
 load_standings(season = "current", round = "last", type = c("driver", "constructor"))
 ```
 
-## Use f1dataR cache capability instead of manual.
-
-```R
-options(f1dataR.cache = "path/to/directory")
-```
-
-## Plot a track and gears in use
-
-```R
-plot_fastest(season = 2022, round = 12, session = "R", driver = "VER", color = "gear")
-```
