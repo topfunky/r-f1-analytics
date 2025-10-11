@@ -23,7 +23,12 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.3.2'
-          use-public-rspm: true
+          use-public-rspm: false
+      
+      - name: Configure cran4linux RSPM repository
+        run: |
+          echo "options(repos = c(RSPM = 'https://cran4linux.github.io/rspm/', CRAN = 'https://cloud.r-project.org/'))" >> ~/.Rprofile
+          cat ~/.Rprofile
       
       - name: Install system dependencies
         run: |
@@ -40,21 +45,26 @@ jobs:
             libtiff5-dev \
             libjpeg-dev
       
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-4.3.2-${{ hashFiles('.github/workflows/build-plots.yml') }}
-          restore-keys: ${{ runner.os }}-r-4.3.2-
-      
       - name: Install R dependencies
-        run: |
-          install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr'))
-          remotes::install_github('SCasanova/f1dataR', auth_token = Sys.getenv('GITHUB_PAT'))
-        shell: Rscript {0}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            any::remotes
+            any::tidyr
+            SCasanova/f1dataR
+            topfunky/gghighcontrast
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      
+
+      - name: Cache F1 data
+        uses: actions/cache@v4
+        with:
+          path: data/cache
+          key: f1-data-${{ github.run_id }}
+          restore-keys: |
+            f1-data-
+
       - name: Check R code formatting
         run: |
           # Install air if available (skip if not to avoid CI failure)
@@ -66,8 +76,8 @@ jobs:
       
       - name: Run plot generation scripts
         run: |
-          chmod +x scripts/render_all_plots.sh
-          ./scripts/render_all_plots.sh
+          chmod +x bin/render_all_plots.sh
+          ./bin/render_all_plots.sh
       
       - name: Prepare staging directory
         run: |
@@ -109,8 +119,13 @@ jobs:
           EOF
           fi
           
+          UTC_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          PT_TIME=$(TZ='America/Los_Angeles' date '+%Y-%m-%d %H:%M:%S %Z')
+
           cat >> $GITHUB_STEP_SUMMARY <<EOF
-          **Generated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          **Generated:**
+          - UTC: $UTC_TIME
+          - Pacific: $PT_TIME
           EOF
       
       - name: Publish to staging branch
