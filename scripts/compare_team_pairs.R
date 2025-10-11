@@ -38,7 +38,7 @@ fetch_season_standings <- function(season) {
   # Get only the final standings (last round) for the season
   # Check if round column exists, otherwise assume we already have final standings
   if ("round" %in% colnames(standings)) {
-    final_standings <- standings %>%
+    final_standings <- standings |>
       filter(round == max(round))
   } else {
     final_standings <- standings
@@ -75,11 +75,11 @@ fetch_season_standings <- function(season) {
     }
   }
 
-  result <- result %>%
+  result <- result |>
     mutate(
       season = as.integer(season),
       points = as.numeric(points)
-    ) %>%
+    ) |>
     select(season, driver, team, points)
 
   return(result)
@@ -130,19 +130,19 @@ main <- function() {
   # We need: season, driver, team, points
 
   # Ensure season is integer and points is numeric
-  final_standings <- combined_standings %>%
+  final_standings <- combined_standings |>
     mutate(
       season = as.integer(season),
       points = as.numeric(points)
-    ) %>%
-    select(season, driver, team, points) %>%
+    ) |>
+    select(season, driver, team, points) |>
     # Remove any NA values
     filter(!is.na(driver), !is.na(team), !is.na(points))
 
   # Find teams with exactly 2 drivers (team pairs)
-  team_pairs <- final_standings %>%
-    group_by(season, team) %>%
-    filter(n() == 2) %>%
+  team_pairs <- final_standings |>
+    group_by(season, team) |>
+    filter(n() == 2) |>
     summarise(
       driver1 = first(driver),
       driver2 = last(driver),
@@ -151,7 +151,7 @@ main <- function() {
       difference = driver1_points - driver2_points,
       combined_points = sum(points, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(desc(combined_points))
 
   cat(sprintf(
@@ -162,7 +162,7 @@ main <- function() {
   cat("Step 3: Identifying 2025 McLaren drivers...\n")
 
   # Find McLaren in 2025
-  mclaren_2025 <- team_pairs %>%
+  mclaren_2025 <- team_pairs |>
     filter(season == 2025, grepl("mclaren", tolower(team)))
 
   if (nrow(mclaren_2025) == 0) {
@@ -186,12 +186,12 @@ main <- function() {
   cat("\nStep 4: Generating comparison table...\n")
 
   # Create formatted output table
-  output_table <- team_pairs %>%
+  output_table <- team_pairs |>
     mutate(
       rank = row_number(),
       drivers = sprintf("%s & %s", driver1, driver2),
       is_mclaren_2025 = (season == 2025 & grepl("mclaren", tolower(team)))
-    ) %>%
+    ) |>
     select(
       rank,
       season,
@@ -214,10 +214,10 @@ main <- function() {
 
   # Format and print table
   print(
-    output_table %>%
+    output_table |>
       mutate(
         highlight = ifelse(is_mclaren_2025, " *** McLaren 2025 ***", "")
-      ) %>%
+      ) |>
       select(-is_mclaren_2025),
     n = Inf
   )
@@ -262,7 +262,7 @@ main <- function() {
   cat("\nStep 5: Saving results...\n")
   output_file <- file.path(OUTPUT_DIR, "team_pairs_comparison.csv")
   write.csv(
-    output_table %>% select(-is_mclaren_2025),
+    output_table |> select(-is_mclaren_2025),
     output_file,
     row.names = FALSE
   )
@@ -272,14 +272,14 @@ main <- function() {
   cat("\nStep 6: Creating visualization...\n")
 
   # Create a plot showing top team pairs by combined points
-  top_team_pairs <- team_pairs %>%
-    slice_head(n = 20) %>%
+  top_team_pairs <- team_pairs |>
+    slice_head(n = 20) |>
     mutate(
       team_display = sprintf("%s (%d)", team, season),
       is_mclaren_2025 = (season == 2025 & grepl("mclaren", tolower(team)))
     )
 
-  p <- top_team_pairs %>%
+  p <- top_team_pairs |>
     ggplot(aes(
       x = reorder(team_display, combined_points),
       y = combined_points

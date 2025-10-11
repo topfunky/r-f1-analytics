@@ -54,7 +54,7 @@ main <- function() {
 
   # Get race info for filename
   schedule <- load_schedule(season = SEASON)
-  race_info <- schedule %>% filter(round == ROUND)
+  race_info <- schedule |> filter(round == ROUND)
   circuit_name <- race_info$circuit_name[1]
 
   # Save the plot

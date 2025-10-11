@@ -12,17 +12,13 @@ cat("\n")
 rspm_available <- FALSE
 if (Sys.info()["sysname"] == "Linux") {
   rspm_url <- "https://cran4linux.github.io/rspm/"
-  tryCatch(
-    {
-      con <- url(rspm_url, open = "r")
-      close(con)
-      rspm_available <- TRUE
-      cat("✓ Using cran4linux RSPM for precompiled binary packages\n")
-    },
-    error = function(e) {
-      cat("ℹ cran4linux RSPM not available, using CRAN (may be slower)\n")
-    }
-  )
+  # Test connection by attempting to open URL
+  con <- url(rspm_url, open = "r")
+  if (inherits(con, "connection")) {
+    close(con)
+    rspm_available <- TRUE
+    cat("✓ Using cran4linux RSPM for precompiled binary packages\n")
+  }
 }
 
 # Set repository to use cran4linux RSPM if available, otherwise CRAN
@@ -131,22 +127,9 @@ test_packages <- c("ggplot2", "dplyr", "f1dataR")
 all_ok <- TRUE
 
 for (pkg in test_packages) {
-  result <- tryCatch(
-    {
-      library(pkg, character.only = TRUE, quietly = TRUE)
-      TRUE
-    },
-    error = function(e) {
-      FALSE
-    }
-  )
-
-  if (result) {
-    cat(sprintf("✓ %s loads successfully\n", pkg))
-  } else {
-    cat(sprintf("✗ %s failed to load\n", pkg))
-    all_ok <- FALSE
-  }
+  # Load library and let errors propagate naturally
+  library(pkg, character.only = TRUE, quietly = TRUE)
+  cat(sprintf("✓ %s loads successfully\n", pkg))
 }
 
 cat("\n")

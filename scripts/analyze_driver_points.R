@@ -41,14 +41,14 @@ main <- function() {
 
   # Season-by-season summary
   cat("Season Summary:\n")
-  season_summary <- race_points %>%
-    group_by(season) %>%
+  season_summary <- race_points |>
+    group_by(season) |>
     summarise(
       races = n_distinct(round),
       drivers = n_distinct(driver_id),
       total_race_entries = n(),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(season)
 
   print(season_summary)
@@ -56,22 +56,22 @@ main <- function() {
 
   # Top drivers by total points (new scoring system)
   cat("Top 10 Drivers by Total Points (New Scoring System):\n")
-  top_drivers <- cumulative_points %>%
-    group_by(season, driver_id, driver_name, constructor_name) %>%
+  top_drivers <- cumulative_points |>
+    group_by(season, driver_id, driver_name, constructor_name) |>
     summarise(
       total_new_points = max(cumulative_points),
       total_original_points = max(cumulative_original_points),
       races = n(),
       .groups = "drop"
-    ) %>%
-    group_by(season) %>%
-    arrange(desc(total_new_points)) %>%
-    slice_head(n = 10) %>%
-    ungroup() %>%
+    ) |>
+    group_by(season) |>
+    arrange(desc(total_new_points)) |>
+    slice_head(n = 10) |>
+    ungroup() |>
     arrange(season, desc(total_new_points))
 
   for (season in unique(top_drivers$season)) {
-    season_data <- top_drivers %>% filter(season == season)
+    season_data <- top_drivers |> filter(season == season)
     cat(sprintf("\n%d Season:\n", season))
     for (i in 1:nrow(season_data)) {
       cat(sprintf(
@@ -90,15 +90,15 @@ main <- function() {
   cat("Points Distribution Analysis:\n")
 
   # Race-by-race points distribution
-  points_dist <- race_points %>%
-    group_by(season) %>%
+  points_dist <- race_points |>
+    group_by(season) |>
     summarise(
       avg_points_per_race = mean(new_points, na.rm = TRUE),
       median_points_per_race = median(new_points, na.rm = TRUE),
       max_points_per_race = max(new_points, na.rm = TRUE),
       drivers_scoring_points = sum(new_points > 0, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(season)
 
   print(points_dist)
@@ -106,21 +106,21 @@ main <- function() {
   # Constructor analysis
   cat("\n")
   cat("Constructor Performance (Total Points):\n")
-  constructor_performance <- cumulative_points %>%
-    group_by(season, constructor_name) %>%
+  constructor_performance <- cumulative_points |>
+    group_by(season, constructor_name) |>
     summarise(
       total_points = sum(max(cumulative_points), na.rm = TRUE),
       drivers = n_distinct(driver_id),
       .groups = "drop"
-    ) %>%
-    group_by(season) %>%
-    arrange(desc(total_points)) %>%
-    slice_head(n = 5) %>%
-    ungroup() %>%
+    ) |>
+    group_by(season) |>
+    arrange(desc(total_points)) |>
+    slice_head(n = 5) |>
+    ungroup() |>
     arrange(season, desc(total_points))
 
   for (season in unique(constructor_performance$season)) {
-    season_data <- constructor_performance %>% filter(season == season)
+    season_data <- constructor_performance |> filter(season == season)
     cat(sprintf("\n%d Season:\n", season))
     for (i in 1:nrow(season_data)) {
       cat(sprintf(
@@ -136,20 +136,20 @@ main <- function() {
   # Comparison with original scoring system
   cat("\n")
   cat("Scoring System Comparison:\n")
-  scoring_comparison <- cumulative_points %>%
-    group_by(season, driver_id, driver_name) %>%
+  scoring_comparison <- cumulative_points |>
+    group_by(season, driver_id, driver_name) |>
     summarise(
       new_total = max(cumulative_points, na.rm = TRUE),
       original_total = max(cumulative_original_points, na.rm = TRUE),
       difference = new_total - original_total,
       .groups = "drop"
-    ) %>%
-    filter(new_total > 0) %>%
+    ) |>
+    filter(new_total > 0) |>
     arrange(desc(abs(difference)))
 
   cat("Top 10 drivers with biggest point differences:\n")
-  top_differences <- scoring_comparison %>%
-    slice_head(n = 10) %>%
+  top_differences <- scoring_comparison |>
+    slice_head(n = 10) |>
     arrange(desc(difference))
 
   for (i in 1:nrow(top_differences)) {
@@ -166,22 +166,22 @@ main <- function() {
   # Race wins analysis
   cat("\n")
   cat("Race Wins Analysis:\n")
-  race_wins <- race_points %>%
-    filter(position == 1) %>%
-    group_by(season, driver_name, constructor_name) %>%
+  race_wins <- race_points |>
+    filter(position == 1) |>
+    group_by(season, driver_name, constructor_name) |>
     summarise(
       wins = n(),
       total_points = sum(new_points, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
-    group_by(season) %>%
-    arrange(desc(wins), desc(total_points)) %>%
-    slice_head(n = 5) %>%
-    ungroup() %>%
+    ) |>
+    group_by(season) |>
+    arrange(desc(wins), desc(total_points)) |>
+    slice_head(n = 5) |>
+    ungroup() |>
     arrange(season, desc(wins))
 
   for (season in unique(race_wins$season)) {
-    season_data <- race_wins %>% filter(season == season)
+    season_data <- race_wins |> filter(season == season)
     cat(sprintf("\n%d Season:\n", season))
     for (i in 1:nrow(season_data)) {
       cat(sprintf(
@@ -198,9 +198,9 @@ main <- function() {
   # Podium analysis
   cat("\n")
   cat("Podium Analysis (Top 3 finishes):\n")
-  podiums <- race_points %>%
-    filter(position <= 3) %>%
-    group_by(season, driver_name, constructor_name) %>%
+  podiums <- race_points |>
+    filter(position <= 3) |>
+    group_by(season, driver_name, constructor_name) |>
     summarise(
       podiums = n(),
       wins = sum(position == 1),
@@ -208,15 +208,15 @@ main <- function() {
       third = sum(position == 3),
       total_points = sum(new_points, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
-    group_by(season) %>%
-    arrange(desc(podiums), desc(total_points)) %>%
-    slice_head(n = 5) %>%
-    ungroup() %>%
+    ) |>
+    group_by(season) |>
+    arrange(desc(podiums), desc(total_points)) |>
+    slice_head(n = 5) |>
+    ungroup() |>
     arrange(season, desc(podiums))
 
   for (season in unique(podiums$season)) {
-    season_data <- podiums %>% filter(season == season)
+    season_data <- podiums |> filter(season == season)
     cat(sprintf("\n%d Season:\n", season))
     for (i in 1:nrow(season_data)) {
       cat(sprintf(

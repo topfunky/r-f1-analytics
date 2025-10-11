@@ -35,7 +35,7 @@ plot_track_gears <- function(
     stop(sprintf("No schedule found for season %d", season))
   }
 
-  race_info <- schedule %>%
+  race_info <- schedule |>
     filter(round == !!round)
 
   if (nrow(race_info) == 0) {
@@ -127,40 +127,33 @@ plot_all_tracks_season <- function(
 
     cat(sprintf("  Loading Round %s: %s... ", round_num, circuit_name))
 
-    # Try to load telemetry data
-    tryCatch(
-      {
-        # Load telemetry for this race
-        telemetry <- f1dataR::load_driver_telemetry(
-          season = season,
-          round = round_num,
-          driver = driver,
-          session = session,
-          laps = "fastest"
-        )
-
-        if (!is.null(telemetry) && nrow(telemetry) > 0) {
-          # Rename n_gear to gear for consistency
-          if ("n_gear" %in% names(telemetry)) {
-            telemetry$gear <- telemetry$n_gear
-          }
-
-          # Add race identification columns
-          telemetry$round <- round_num
-          telemetry$circuit_name <- circuit_name
-          telemetry$race_name <- race_name
-          telemetry$race_label <- sprintf("R%s: %s", round_num, circuit_name)
-
-          all_data[[length(all_data) + 1]] <- telemetry
-          cat("OK\n")
-        } else {
-          cat("No data\n")
-        }
-      },
-      error = function(e) {
-        cat(sprintf("Error: %s\n", e$message))
-      }
+    # Load telemetry for this race
+    # Allow errors to propagate naturally so they can be detected and fixed
+    telemetry <- f1dataR::load_driver_telemetry(
+      season = season,
+      round = round_num,
+      driver = driver,
+      session = session,
+      laps = "fastest"
     )
+
+    if (!is.null(telemetry) && nrow(telemetry) > 0) {
+      # Rename n_gear to gear for consistency
+      if ("n_gear" %in% names(telemetry)) {
+        telemetry$gear <- telemetry$n_gear
+      }
+
+      # Add race identification columns
+      telemetry$round <- round_num
+      telemetry$circuit_name <- circuit_name
+      telemetry$race_name <- race_name
+      telemetry$race_label <- sprintf("R%s: %s", round_num, circuit_name)
+
+      all_data[[length(all_data) + 1]] <- telemetry
+      cat("OK\n")
+    } else {
+      cat("No data\n")
+    }
   }
 
   if (length(all_data) == 0) {

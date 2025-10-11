@@ -62,7 +62,7 @@ fetch_race_results_with_retry <- function(
     }
 
     # Process and standardize the data
-    processed_results <- results %>%
+    processed_results <- results |>
       mutate(
         season = as.integer(season),
         round = as.integer(round),
@@ -70,7 +70,7 @@ fetch_race_results_with_retry <- function(
         points = as.numeric(points),
         driver_id = as.character(driver_id),
         constructor_id = as.character(constructor_id)
-      ) %>%
+      ) |>
       select(season, round, driver_id, constructor_id, position, points, status)
 
     return(processed_results)
@@ -101,11 +101,11 @@ get_season_races_with_retry <- function(season, max_retries = MAX_RETRIES) {
     }
 
     # Get unique rounds
-    races <- schedule %>%
-      select(round) %>%
-      distinct() %>%
-      mutate(round = as.integer(round)) %>%
-      arrange(round) %>%
+    races <- schedule |>
+      select(round) |>
+      distinct() |>
+      mutate(round = as.integer(round)) |>
+      arrange(round) |>
       pull(round)
 
     return(races)
@@ -136,9 +136,9 @@ get_driver_names_with_retry <- function(season, max_retries = MAX_RETRIES) {
     }
 
     # Process driver data
-    driver_names <- drivers %>%
-      mutate(driver_name = paste(given_name, family_name)) %>%
-      select(driver_id, driver_name) %>%
+    driver_names <- drivers |>
+      mutate(driver_name = paste(given_name, family_name)) |>
+      select(driver_id, driver_name) |>
       distinct()
 
     return(driver_names)
@@ -176,8 +176,8 @@ get_constructor_names_with_retry <- function(
     }
 
     # Process constructor data
-    constructor_names <- constructors %>%
-      select(constructor_id, constructor_name = name) %>%
+    constructor_names <- constructors |>
+      select(constructor_id, constructor_name = name) |>
       distinct()
 
     return(constructor_names)
@@ -245,16 +245,16 @@ calculate_season_points <- function(season) {
   combined_results <- bind_rows(all_race_results)
 
   # Apply post-2010 scoring system
-  race_points <- combined_results %>%
+  race_points <- combined_results |>
     mutate(
       # Apply new scoring system based on position
       new_points = sapply(position, apply_scoring_system),
       # Keep original points for comparison
       original_points = points
-    ) %>%
+    ) |>
     # Add driver and constructor names
-    left_join(driver_names, by = "driver_id") %>%
-    left_join(constructor_names, by = "constructor_id") %>%
+    left_join(driver_names, by = "driver_id") |>
+    left_join(constructor_names, by = "constructor_id") |>
     # Handle missing names
     mutate(
       driver_name = ifelse(is.na(driver_name), driver_id, driver_name),
@@ -263,7 +263,7 @@ calculate_season_points <- function(season) {
         constructor_id,
         constructor_name
       )
-    ) %>%
+    ) |>
     select(
       season,
       round,
@@ -275,7 +275,7 @@ calculate_season_points <- function(season) {
       original_points,
       new_points,
       status
-    ) %>%
+    ) |>
     arrange(round, position)
 
   return(race_points)
@@ -287,20 +287,20 @@ calculate_cumulative_points <- function(race_points) {
     return(NULL)
   }
 
-  cumulative_points <- race_points %>%
+  cumulative_points <- race_points |>
     group_by(
       season,
       driver_id,
       driver_name,
       constructor_id,
       constructor_name
-    ) %>%
-    arrange(round) %>%
+    ) |>
+    arrange(round) |>
     mutate(
       cumulative_points = cumsum(new_points),
       cumulative_original_points = cumsum(original_points)
-    ) %>%
-    ungroup() %>%
+    ) |>
+    ungroup() |>
     select(
       season,
       round,
@@ -313,7 +313,7 @@ calculate_cumulative_points <- function(race_points) {
       cumulative_points,
       original_points,
       cumulative_original_points
-    ) %>%
+    ) |>
     arrange(season, driver_id, round)
 
   return(cumulative_points)
@@ -398,36 +398,36 @@ main <- function() {
   cat("===========================================================\n")
 
   # Season summary
-  season_summary <- combined_race_points %>%
-    group_by(season) %>%
+  season_summary <- combined_race_points |>
+    group_by(season) |>
     summarise(
       races = n_distinct(round),
       drivers = n_distinct(driver_id),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(season)
 
   cat("Seasons processed:\n")
   print(season_summary)
 
   # Top drivers by total points (new scoring system)
-  top_drivers <- combined_cumulative_points %>%
-    group_by(season, driver_id, driver_name, constructor_name) %>%
+  top_drivers <- combined_cumulative_points |>
+    group_by(season, driver_id, driver_name, constructor_name) |>
     summarise(
       total_points = max(cumulative_points),
       total_original_points = max(cumulative_original_points),
       races = n(),
       .groups = "drop"
-    ) %>%
-    group_by(season) %>%
-    arrange(desc(total_points)) %>%
-    slice_head(n = 3) %>%
-    ungroup() %>%
+    ) |>
+    group_by(season) |>
+    arrange(desc(total_points)) |>
+    slice_head(n = 3) |>
+    ungroup() |>
     arrange(season, desc(total_points))
 
   cat("\nTop 3 drivers by total points (new scoring system) per season:\n")
   for (season in unique(top_drivers$season)) {
-    season_data <- top_drivers %>% filter(season == season)
+    season_data <- top_drivers |> filter(season == season)
     cat(sprintf("\n%d:\n", season))
     for (i in 1:nrow(season_data)) {
       cat(sprintf(
