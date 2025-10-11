@@ -103,6 +103,9 @@ plot_all_tracks_season <- function(
   if (!require("gghighcontrast", quietly = TRUE)) {
     stop("Package 'gghighcontrast' is required but not installed")
   }
+  if (!require("purrr", quietly = TRUE)) {
+    stop("Package 'purrr' is required but not installed")
+  }
 
   # Get schedule for the season
   schedule <- f1dataR::load_schedule(season = season)
@@ -117,46 +120,44 @@ plot_all_tracks_season <- function(
     season
   ))
 
-  # Collect telemetry data for all rounds
-  all_data <- list()
+  # Collect telemetry data for all rounds using map
+  combined_data <- schedule |>
+    purrr::pmap_dfr(function(round, circuit_name, race_name, ...) {
+      # Convert round to numeric to ensure proper parameter passing
+      current_round <- as.numeric(round)
+      cat(sprintf("  Loading Round %s: %s... ", current_round, circuit_name))
 
-  for (i in 1:nrow(schedule)) {
-    round_num <- schedule$round[i]
-    circuit_name <- schedule$circuit_name[i]
-    race_name <- schedule$race_name[i]
+      # Load telemetry for this race
+      # Allow errors to propagate naturally so they can be detected and fixed
+      telemetry <- f1dataR::load_driver_telemetry(
+        season = season,
+        round = current_round,
+        driver = driver,
+        session = session,
+        laps = "fastest"
+      )
 
-    cat(sprintf("  Loading Round %s: %s... ", round_num, circuit_name))
+      if (!is.null(telemetry) && nrow(telemetry) > 0) {
+        # Rename n_gear to gear for consistency
+        if ("n_gear" %in% names(telemetry)) {
+          telemetry$gear <- telemetry$n_gear
+        }
 
-    # Load telemetry for this race
-    # Allow errors to propagate naturally so they can be detected and fixed
-    telemetry <- f1dataR::load_driver_telemetry(
-      season = season,
-      round = round_num,
-      driver = driver,
-      session = session,
-      laps = "fastest"
-    )
+        # Add race identification columns
+        telemetry$round <- current_round
+        telemetry$circuit_name <- circuit_name
+        telemetry$race_name <- race_name
+        telemetry$race_label <- sprintf("R%s: %s", current_round, circuit_name)
 
-    if (!is.null(telemetry) && nrow(telemetry) > 0) {
-      # Rename n_gear to gear for consistency
-      if ("n_gear" %in% names(telemetry)) {
-        telemetry$gear <- telemetry$n_gear
+        cat("OK\n")
+        return(telemetry)
+      } else {
+        cat("No data\n")
+        return(NULL)
       }
+    })
 
-      # Add race identification columns
-      telemetry$round <- round_num
-      telemetry$circuit_name <- circuit_name
-      telemetry$race_name <- race_name
-      telemetry$race_label <- sprintf("R%s: %s", round_num, circuit_name)
-
-      all_data[[length(all_data) + 1]] <- telemetry
-      cat("OK\n")
-    } else {
-      cat("No data\n")
-    }
-  }
-
-  if (length(all_data) == 0) {
+  if (is.null(combined_data) || nrow(combined_data) == 0) {
     stop(sprintf(
       "No telemetry data found for driver %s in season %d",
       driver,
@@ -164,15 +165,21 @@ plot_all_tracks_season <- function(
     ))
   }
 
-  # Combine all data
-  combined_data <- bind_rows(all_data)
+  # Create ordered factor for race_label to ensure correct faceting
+  combined_data$race_label <- factor(
+    combined_data$race_label,
+    levels = unique(combined_data$race_label[order(combined_data$round)])
+  )
 
-  cat(sprintf("Creating faceted plot for %d races...\n", length(all_data)))
+  cat(sprintf(
+    "\nCreating faceted plot for %d races...\n",
+    length(combined_data)
+  ))
 
   # Create the faceted plot
   p <- ggplot(combined_data, aes(x = x, y = y, color = .data[[color]])) +
     geom_path(linewidth = 0.8) +
-    facet_wrap(~race_label) +
+    facet_wrap(~round) +
     coord_fixed(ratio = 0.25) +
     labs(
       title = sprintf("%s - All Tracks (%d Season)", driver, season),
