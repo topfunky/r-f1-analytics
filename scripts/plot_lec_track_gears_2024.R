@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Plot track and gears in use for driver VER in 2022 race 10
+# Plot track and gears in use on fastest lap by a single driver
 # Uses the plot_track_gears function from R/plot_functions.R
 
 # Load required packages
@@ -14,9 +14,9 @@ suppressPackageStartupMessages({
 source("R/plot_functions.R")
 
 # Configuration
-SEASON <- 2022
-ROUND <- 10
-DRIVER <- "VER"
+SEASON <- 2024
+ROUND <- 16
+DRIVER <- "LEC"
 OUTPUT_DIR <- "plots"
 
 # Create directories

@@ -1,13 +1,12 @@
 #!/usr/bin/env Rscript
-# Plot track and gears in use for driver VER in 2022 race 10
-# Uses the plot_track_gears function from R/plot_functions.R
+# Example: Plot all tracks for a driver in a season using facet_wrap
+# Uses the plot_all_tracks_season function from R/plot_functions.R
 
 # Load required packages
 suppressPackageStartupMessages({
   library(f1dataR)
   library(ggplot2)
   library(dplyr)
-  library(gghighcontrast)
 })
 
 # Source plotting functions
@@ -15,7 +14,6 @@ source("R/plot_functions.R")
 
 # Configuration
 SEASON <- 2022
-ROUND <- 10
 DRIVER <- "VER"
 OUTPUT_DIR <- "plots"
 
@@ -26,54 +24,35 @@ dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 main <- function() {
   cat("\n")
   cat("===========================================================\n")
-  cat(sprintf(
-    "F1 Track and Gears Analysis - %s %d Round %d\n",
-    DRIVER,
-    SEASON,
-    ROUND
-  ))
+  cat(sprintf("F1 All Tracks Analysis - %s %d Season\n", DRIVER, SEASON))
   cat("===========================================================\n")
-  cat(sprintf("Season: %d, Round: %d, Driver: %s\n", SEASON, ROUND, DRIVER))
   cat("\n")
 
-  cat("Step 1: Creating track and gears plot...\n")
-
-  # Use plot_track_gears function
-  p <- plot_track_gears(
+  # Create faceted plot for all tracks in the season
+  p <- plot_all_tracks_season(
     season = SEASON,
-    round = ROUND,
     driver = DRIVER,
     session = "R",
     color = "gear"
   )
 
-  # Add custom styling
-  p <- p + theme_high_contrast()
-
-  cat("Step 2: Saving plot...\n")
-
-  # Get race info for filename
-  schedule <- load_schedule(season = SEASON)
-  race_info <- schedule %>% filter(round == ROUND)
-  circuit_name <- race_info$circuit_name[1]
+  cat("\nSaving plot...\n")
 
   # Save the plot
   plot_file <- file.path(
     OUTPUT_DIR,
     sprintf(
-      "%s_track_gears_%d_race_%d_%s.png",
+      "%s_all_tracks_%d_season.png",
       DRIVER,
-      SEASON,
-      ROUND,
-      tolower(gsub(" ", "_", circuit_name))
+      SEASON
     )
   )
 
   ggsave(
     plot_file,
     p,
-    width = 12,
-    height = 8,
+    width = 24,
+    height = 12,
     dpi = 300
   )
 
