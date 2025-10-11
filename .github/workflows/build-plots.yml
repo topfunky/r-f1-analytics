@@ -68,8 +68,8 @@ jobs:
       
       - name: Run plot generation scripts
         run: |
-          chmod +x scripts/render_all_plots.sh
-          ./scripts/render_all_plots.sh
+          chmod +x bin/render_all_plots.sh
+          ./bin/render_all_plots.sh
       
       - name: Prepare staging directory
         run: |

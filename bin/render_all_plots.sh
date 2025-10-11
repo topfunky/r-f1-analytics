@@ -10,28 +10,42 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}F1 Analytics - Rendering All Plots${NC}"
-echo -e "${BLUE}========================================${NC}"
+# Color functions for cleaner output
+red() { echo -e "${RED}$*${NC}"; }
+green() { echo -e "${GREEN}$*${NC}"; }
+yellow() { echo -e "${YELLOW}$*${NC}"; }
+blue() { echo -e "${BLUE}$*${NC}"; }
+
+blue "========================================"
+blue "F1 Analytics - Rendering All Plots"
+blue "========================================"
 echo ""
 
 # Create plots directory if it doesn't exist
 if [ ! -d "plots" ]; then
-    echo -e "${YELLOW}Creating plots directory...${NC}"
+    yellow "Creating plots directory..."
     mkdir -p plots
 fi
 
 # Create data cache directory if it doesn't exist
 if [ ! -d "data/cache" ]; then
-    echo -e "${YELLOW}Creating data/cache directory...${NC}"
+    yellow "Creating data/cache directory..."
     mkdir -p data/cache
 fi
 
 # Define script categories and dependencies
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="scripts"
+
+# Utility scripts that should not be run directly
+# These are helper/library scripts sourced by other scripts
+UTILITY_SCRIPTS=(
+    "color_utils.R"
+    "utils.R"
+)
 
 # Data gathering scripts (must run first)
 DATA_SCRIPTS=(
+    "_setup_project.R"
     "calculate_driver_points_robust.R"
 )
 
@@ -41,15 +55,18 @@ ANALYSIS_SCRIPTS=(
     "visualize_driver_points.R"
 )
 
-# Other scripts (no dependencies)
-OTHER_SCRIPTS=$(find "$SCRIPT_DIR" -maxdepth 1 -name "*.R" -type f | grep -v -E "$(printf '%s|' "${DATA_SCRIPTS[@]}" "${ANALYSIS_SCRIPTS[@]}")" | sort)
+# Build exclusion pattern for utility scripts
+UTILITY_PATTERN=$(printf '%s|' "${UTILITY_SCRIPTS[@]}" | sed 's/|$//')
+
+# Other scripts (no dependencies, excluding utility scripts)
+OTHER_SCRIPTS=$(find "$SCRIPT_DIR" -maxdepth 1 -name "*.R" -type f | grep -v -E "$(printf '%s|' "${DATA_SCRIPTS[@]}" "${ANALYSIS_SCRIPTS[@]}" | sed 's/|$//')" | grep -v -E "$UTILITY_PATTERN" | sort)
 
 # Count total scripts
 TOTAL_SCRIPTS=$((${#DATA_SCRIPTS[@]} + ${#ANALYSIS_SCRIPTS[@]} + $(echo "$OTHER_SCRIPTS" | grep -c "^" || echo "0")))
 
 if [ "$TOTAL_SCRIPTS" -eq 0 ]; then
-    echo -e "${YELLOW}No R scripts found in scripts/ directory${NC}"
-    echo -e "${YELLOW}Create some R scripts that generate plots!${NC}"
+    yellow "No R scripts found in scripts/ directory"
+    yellow "Create some R scripts that generate plots!"
     exit 0
 fi
 
@@ -69,10 +86,10 @@ CURRENT=0
 run_script() {
     local script_path="$1"
     local script_name=$(basename "$script_path")
-    
+
     CURRENT=$((CURRENT + 1))
     echo -e "${BLUE}[${CURRENT}/${TOTAL_SCRIPTS}]${NC} Running ${GREEN}${script_name}${NC}..."
-    
+
     # Run the R script and capture output
     if Rscript "$script_path" 2>&1; then
         echo -e "${GREEN}✓${NC} ${script_name} completed successfully"
@@ -87,35 +104,35 @@ run_script() {
 }
 
 # 1. Run data gathering scripts first
-echo -e "${YELLOW}Phase 1: Data Gathering${NC}"
-echo -e "${YELLOW}========================${NC}"
+yellow "Phase 1: Data Gathering"
+yellow "========================"
 for script in "${DATA_SCRIPTS[@]}"; do
     script_path="$SCRIPT_DIR/$script"
     if [ -f "$script_path" ]; then
         run_script "$script_path"
         echo ""
     else
-        echo -e "${YELLOW}Warning: Data script $script not found, skipping...${NC}"
+        yellow "Warning: Data script $script not found, skipping..."
     fi
 done
 
 # 2. Run analysis scripts (depend on data gathering)
-echo -e "${YELLOW}Phase 2: Analysis${NC}"
-echo -e "${YELLOW}=================${NC}"
+yellow "Phase 2: Analysis"
+yellow "================="
 for script in "${ANALYSIS_SCRIPTS[@]}"; do
     script_path="$SCRIPT_DIR/$script"
     if [ -f "$script_path" ]; then
         run_script "$script_path"
         echo ""
     else
-        echo -e "${YELLOW}Warning: Analysis script $script not found, skipping...${NC}"
+        yellow "Warning: Analysis script $script not found, skipping..."
     fi
 done
 
 # 3. Run other scripts
 if [ -n "$OTHER_SCRIPTS" ]; then
-    echo -e "${YELLOW}Phase 3: Other Scripts${NC}"
-    echo -e "${YELLOW}======================${NC}"
+    yellow "Phase 3: Other Scripts"
+    yellow "======================"
     for script in $OTHER_SCRIPTS; do
         run_script "$script"
         echo ""
@@ -123,22 +140,22 @@ if [ -n "$OTHER_SCRIPTS" ]; then
 fi
 
 # Summary
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Summary${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo -e "Total scripts: ${TOTAL_SCRIPTS}"
-echo -e "${GREEN}Successful: ${SUCCESS_COUNT}${NC}"
-echo -e "${RED}Failed: ${FAIL_COUNT}${NC}"
+blue "========================================"
+blue "Summary"
+blue "========================================"
+echo "Total scripts: ${TOTAL_SCRIPTS}"
+green "Successful: ${SUCCESS_COUNT}"
+red "Failed: ${FAIL_COUNT}"
 
 if [ "$FAIL_COUNT" -gt 0 ]; then
     echo ""
-    echo -e "${RED}Failed scripts:${NC}"
+    red "Failed scripts:"
     for failed in "${FAILED_SCRIPTS[@]}"; do
         echo -e "  ${RED}✗${NC} $failed"
     done
     exit 1
 else
     echo ""
-    echo -e "${GREEN}All plots generated successfully! 🏎️${NC}"
+    green "All plots generated successfully! 🏎️"
     exit 0
 fi
