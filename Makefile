@@ -1,11 +1,12 @@
-.PHONY: help format format-check clean plots install renv-install renv-init renv-snapshot renv-restore renv-status renv-update renv-clean
+.PHONY: help format format-check clean clean-cache plots install renv-install renv-init renv-snapshot renv-restore renv-status renv-update renv-clean
 
 help:
 	@echo "Available targets:"
 	@echo "  format        - Format all R files using air"
 	@echo "  format-check  - Check R file formatting without modifying"
 	@echo "  plots         - Generate all plots"
-	@echo "  clean         - Remove generated plots and cache"
+	@echo "  clean         - Remove generated plots"
+	@echo "  clean-cache   - Remove data cache files"
 	@echo "  install       - Install R dependencies (traditional method)"
 	@echo ""
 	@echo "renv targets (recommended for reproducible environments):"
@@ -35,8 +36,13 @@ plots:
 
 # Clean generated files
 clean:
-	@echo "Cleaning generated files..."
+	@echo "Cleaning generated plots..."
 	@rm -rf plots/*.png plots/*.pdf
+	@echo "Clean complete!"
+
+# Clean cache files
+clean-cache:
+	@echo "Cleaning cache files..."
 	@rm -rf data/cache/*.rds
 	@rm -rf .f1dataR_cache/
 	@echo "Clean complete!"
