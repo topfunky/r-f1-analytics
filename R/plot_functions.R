@@ -1,5 +1,108 @@
 # F1 Track and Gears Plotting Functions
 
+# Helper Functions --------------------------------------------------------
+
+#' Check if required packages are installed
+#'
+#' @param packages Character vector of package names to check
+#' @return NULL (stops execution if packages are missing)
+check_required_packages <- function(packages) {
+  for (pkg in packages) {
+    if (!require(pkg, quietly = TRUE, character.only = TRUE)) {
+      stop(sprintf("Package '%s' is required but not installed", pkg))
+    }
+  }
+}
+
+#' Get race information from schedule
+#'
+#' @param season Integer, the F1 season year
+#' @param round Integer, the race round number (optional)
+#' @return Data frame with race information
+get_race_info <- function(season, round = NULL) {
+  schedule <- f1dataR::load_schedule(season = season)
+
+  if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
+    stop(sprintf("No schedule found for season %d", season))
+  }
+
+  if (!is.null(round)) {
+    schedule <- schedule |>
+      dplyr::filter(round == !!round)
+
+    if (nrow(schedule) == 0) {
+      stop(sprintf(
+        "No race information found for season %d, round %d",
+        season,
+        round
+      ))
+    }
+  }
+
+  return(schedule)
+}
+
+#' Load telemetry data for a single race
+#'
+#' @param season Integer, the F1 season year
+#' @param round Integer, the race round number
+#' @param driver String, three-letter driver code
+#' @param session String, session type
+#' @return Data frame with telemetry data or NULL if unavailable
+load_race_telemetry <- function(season, round, driver, session) {
+  telemetry <- f1dataR::load_driver_telemetry(
+    season = season,
+    round = round,
+    driver = driver,
+    session = session,
+    laps = "fastest"
+  )
+
+  if (is.null(telemetry) || nrow(telemetry) == 0) {
+    return(NULL)
+  }
+
+  # Rename n_gear to gear for consistency
+  if ("n_gear" %in% names(telemetry)) {
+    telemetry$gear <- telemetry$n_gear
+  }
+
+  return(telemetry)
+}
+
+#' Add race identification columns to telemetry data
+#'
+#' @param telemetry Data frame with telemetry data
+#' @param round Integer, race round number
+#' @param circuit_name String, circuit name
+#' @param race_name String, race name
+#' @return Data frame with additional identification columns
+add_race_identifiers <- function(telemetry, round, circuit_name, race_name) {
+  telemetry$round <- round
+  telemetry$circuit_name <- circuit_name
+  telemetry$race_name <- race_name
+  telemetry$race_label <- sprintf("R%s: %s", round, circuit_name)
+  return(telemetry)
+}
+
+#' Apply high contrast theme to plot
+#'
+#' @param p ggplot object
+#' @return ggplot object with theme applied
+add_high_contrast_theme <- function(p) {
+  p +
+    gghighcontrast::theme_high_contrast() +
+    ggplot2::theme(
+      axis.title = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(face = "bold", size = 9)
+    )
+}
+
+# Main Plotting Functions -------------------------------------------------
+
 #' Plot track and gears for a single race
 #'
 #' @param season Integer, the F1 season year
@@ -17,39 +120,12 @@ plot_track_gears <- function(
   color = "gear",
   add_labels = TRUE
 ) {
-  # Load required packages
-  if (!require("f1dataR", quietly = TRUE)) {
-    stop("Package 'f1dataR' is required but not installed")
-  }
-  if (!require("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required but not installed")
-  }
-  if (!require("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required but not installed")
-  }
+  check_required_packages(c("f1dataR", "ggplot2", "dplyr"))
 
-  # Get race information
-  schedule <- f1dataR::load_schedule(season = season)
-
-  if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
-    stop(sprintf("No schedule found for season %d", season))
-  }
-
-  race_info <- schedule |>
-    filter(round == !!round)
-
-  if (nrow(race_info) == 0) {
-    stop(sprintf(
-      "No race information found for season %d, round %d",
-      season,
-      round
-    ))
-  }
-
+  race_info <- get_race_info(season = season, round = round)
   race_name <- race_info$race_name[1]
   circuit_name <- race_info$circuit_name[1]
 
-  # Create the plot using f1dataR's plot_fastest function
   p <- f1dataR::plot_fastest(
     season = season,
     round = round,
@@ -58,10 +134,9 @@ plot_track_gears <- function(
     color = color
   )
 
-  # Add labels if requested
   if (add_labels) {
     p <- p +
-      labs(
+      ggplot2::labs(
         title = sprintf("%s - Track and Gears Analysis", circuit_name),
         subtitle = sprintf(
           "%s (%s) - %s",
@@ -77,78 +152,34 @@ plot_track_gears <- function(
 }
 
 
-#' Plot track and gears for all races in a season
+#' Collect telemetry data for all races in a season
 #'
+#' @param schedule Data frame with race schedule
 #' @param season Integer, the F1 season year
-#' @param driver String, three-letter driver code (e.g., "VER", "LEC")
-#' @param session String, session type (default: "R" for race)
-#' @param color String, what to color by (default: "gear")
-#' @return A ggplot object with faceted plots
-plot_all_tracks_season <- function(
-  season,
-  driver,
-  session = "R",
-  color = "gear"
-) {
-  # Load required packages
-  if (!require("f1dataR", quietly = TRUE)) {
-    stop("Package 'f1dataR' is required but not installed")
-  }
-  if (!require("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required but not installed")
-  }
-  if (!require("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required but not installed")
-  }
-  if (!require("gghighcontrast", quietly = TRUE)) {
-    stop("Package 'gghighcontrast' is required but not installed")
-  }
-  if (!require("purrr", quietly = TRUE)) {
-    stop("Package 'purrr' is required but not installed")
-  }
-
-  # Get schedule for the season
-  schedule <- f1dataR::load_schedule(season = season)
-
-  if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
-    stop(sprintf("No schedule found for season %d", season))
-  }
-
+#' @param driver String, three-letter driver code
+#' @param session String, session type
+#' @return Data frame with combined telemetry data
+collect_season_telemetry <- function(schedule, season, driver, session) {
   cat(sprintf(
     "Loading telemetry data for %d races in %d season...\n",
     nrow(schedule),
     season
   ))
 
-  # Collect telemetry data for all rounds using map
   combined_data <- schedule |>
     purrr::pmap_dfr(function(round, circuit_name, race_name, ...) {
-      # Convert round to numeric to ensure proper parameter passing
       current_round <- as.numeric(round)
       cat(sprintf("  Loading Round %s: %s... ", current_round, circuit_name))
 
-      # Load telemetry for this race
-      # Allow errors to propagate naturally so they can be detected and fixed
-      telemetry <- f1dataR::load_driver_telemetry(
-        season = season,
-        round = current_round,
-        driver = driver,
-        session = session,
-        laps = "fastest"
-      )
+      telemetry <- load_race_telemetry(season, current_round, driver, session)
 
-      if (!is.null(telemetry) && nrow(telemetry) > 0) {
-        # Rename n_gear to gear for consistency
-        if ("n_gear" %in% names(telemetry)) {
-          telemetry$gear <- telemetry$n_gear
-        }
-
-        # Add race identification columns
-        telemetry$round <- current_round
-        telemetry$circuit_name <- circuit_name
-        telemetry$race_name <- race_name
-        telemetry$race_label <- sprintf("R%s: %s", current_round, circuit_name)
-
+      if (!is.null(telemetry)) {
+        telemetry <- add_race_identifiers(
+          telemetry,
+          current_round,
+          circuit_name,
+          race_name
+        )
         cat("OK\n")
         return(telemetry)
       } else {
@@ -165,23 +196,46 @@ plot_all_tracks_season <- function(
     ))
   }
 
-  # Create ordered factor for race_label to ensure correct faceting
+  return(combined_data)
+}
+
+#' Prepare telemetry data for faceted plotting
+#'
+#' @param combined_data Data frame with combined telemetry
+#' @return Data frame with ordered factors for faceting
+prepare_facet_data <- function(combined_data) {
   combined_data$race_label <- factor(
     combined_data$race_label,
     levels = unique(combined_data$race_label[order(combined_data$round)])
   )
+  return(combined_data)
+}
 
-  cat(sprintf(
-    "\nCreating faceted plot for %d races...\n",
-    length(combined_data)
-  ))
+#' Create base faceted track plot
+#'
+#' @param combined_data Data frame with telemetry data
+#' @param color String, what to color by
+#' @return ggplot object
+create_faceted_plot <- function(combined_data, color) {
+  ggplot2::ggplot(
+    combined_data,
+    ggplot2::aes(x = x, y = y, color = .data[[color]])
+  ) +
+    ggplot2::geom_path(linewidth = 0.8) +
+    ggplot2::facet_wrap(~circuit_name) +
+    ggplot2::coord_fixed()
+}
 
-  # Create the faceted plot
-  p <- ggplot(combined_data, aes(x = x, y = y, color = .data[[color]])) +
-    geom_path(linewidth = 0.8) +
-    facet_wrap(~round) +
-    coord_fixed(ratio = 0.25) +
-    labs(
+#' Add labels to season plot
+#'
+#' @param p ggplot object
+#' @param driver String, driver code
+#' @param season Integer, season year
+#' @param color String, color variable name
+#' @return ggplot object with labels
+add_season_labels <- function(p, driver, season, color) {
+  p +
+    ggplot2::labs(
       title = sprintf("%s - All Tracks (%d Season)", driver, season),
       subtitle = sprintf(
         "Track Maps with Gear Usage - %s",
@@ -190,22 +244,42 @@ plot_all_tracks_season <- function(
       caption = "Data: f1dataR | Ergast API",
       color = tools::toTitleCase(color)
     )
+}
 
-  # Apply high contrast theme
-  p <- p +
-    gghighcontrast::theme_high_contrast() +
-    theme(
-      axis.title = element_blank(),
-      axis.text = element_blank(),
-      axis.ticks = element_blank(),
-      panel.grid = element_blank(),
-      strip.text = element_text(face = "bold", size = 9)
-    )
+#' Plot track and gears for all races in a season
+#'
+#' @param season Integer, the F1 season year
+#' @param driver String, three-letter driver code (e.g., "VER", "LEC")
+#' @param session String, session type (default: "R" for race)
+#' @param color String, what to color by (default: "gear")
+#' @return A ggplot object with faceted plots
+plot_all_tracks_season <- function(
+  season,
+  driver,
+  session = "R",
+  color = "gear"
+) {
+  check_required_packages(c(
+    "f1dataR",
+    "ggplot2",
+    "dplyr",
+    "gghighcontrast",
+    "purrr"
+  ))
 
-  # Add color scale for gears if applicable
-  if (color == "gear") {
-    p <- p + scale_color_viridis_c(option = "plasma")
-  }
+  schedule <- get_race_info(season = season)
+
+  combined_data <- collect_season_telemetry(schedule, season, driver, session)
+  combined_data <- prepare_facet_data(combined_data)
+
+  cat(sprintf(
+    "\nCreating faceted plot for %d races...\n",
+    length(unique(combined_data$round))
+  ))
+
+  p <- create_faceted_plot(combined_data, color)
+  p <- add_season_labels(p, driver, season, color)
+  p <- add_high_contrast_theme(p)
 
   return(p)
 }
