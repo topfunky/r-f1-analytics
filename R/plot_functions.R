@@ -246,6 +246,162 @@ add_season_labels <- function(p, driver, season, color) {
     )
 }
 
+#' Plot track and gears for multiple races using patchwork
+#'
+#' @param season Integer, the F1 season year
+#' @param rounds Integer vector, race round numbers to include
+#' @param driver String, three-letter driver code (e.g., "VER", "LEC")
+#' @param session String, session type (default: "R" for race)
+#' @param color String, what to color by (default: "gear")
+#' @param ncol Integer, number of columns for layout (default: NULL, auto)
+#' @param nrow Integer, number of rows for layout (default: NULL, auto)
+#' @return A patchwork composition of plots
+plot_tracks_patchwork <- function(
+  season,
+  rounds,
+  driver,
+  session = "R",
+  color = "gear",
+  ncol = NULL,
+  nrow = NULL
+) {
+  check_required_packages(c(
+    "f1dataR",
+    "ggplot2",
+    "dplyr",
+    "patchwork"
+  ))
+
+  plots <- lapply(rounds, function(r) {
+    plot_track_gears(
+      season = season,
+      round = r,
+      driver = driver,
+      session = session,
+      color = color,
+      add_labels = FALSE
+    )
+  })
+
+  # Combine using patchwork
+  combined <- patchwork::wrap_plots(plots, ncol = ncol, nrow = nrow)
+
+  return(combined)
+}
+
+#' Create a patchwork layout with shared title and annotations
+#'
+#' @param season Integer, the F1 season year
+#' @param rounds Integer vector, race round numbers to include
+#' @param driver String, three-letter driver code
+#' @param session String, session type (default: "R")
+#' @param color String, what to color by (default: "gear")
+#' @param title String, main title (optional)
+#' @param subtitle String, subtitle (optional)
+#' @param ncol Integer, number of columns (default: NULL)
+#' @param nrow Integer, number of rows (default: NULL)
+#' @return A patchwork composition with annotations
+plot_tracks_annotated <- function(
+  season,
+  rounds,
+  driver,
+  session = "R",
+  color = "gear",
+  title = NULL,
+  subtitle = NULL,
+  ncol = NULL,
+  nrow = NULL
+) {
+  check_required_packages(c("patchwork"))
+
+  p <- plot_tracks_patchwork(
+    season = season,
+    rounds = rounds,
+    driver = driver,
+    session = session,
+    color = color,
+    ncol = ncol,
+    nrow = nrow
+  )
+
+  # Add default title if not provided
+  if (is.null(title)) {
+    title <- sprintf("%s - Track Maps (%d Season)", driver, season)
+  }
+
+  if (is.null(subtitle)) {
+    subtitle <- sprintf("Rounds: %s", paste(rounds, collapse = ", "))
+  }
+
+  p <- p +
+    patchwork::plot_annotation(
+      title = title,
+      subtitle = subtitle,
+      caption = "Data: f1dataR | Ergast API",
+      theme = ggplot2::theme(
+        plot.title = ggplot2::element_text(size = 16, face = "bold"),
+        plot.subtitle = ggplot2::element_text(size = 12),
+        plot.caption = ggplot2::element_text(size = 9, hjust = 0)
+      )
+    )
+
+  return(p)
+}
+
+#' Compare two drivers side by side using patchwork
+#'
+#' @param season Integer, the F1 season year
+#' @param round Integer, race round number
+#' @param driver1 String, first driver code
+#' @param driver2 String, second driver code
+#' @param session String, session type (default: "R")
+#' @param color String, what to color by (default: "gear")
+#' @return A patchwork composition comparing two drivers
+plot_driver_comparison <- function(
+  season,
+  round,
+  driver1,
+  driver2,
+  session = "R",
+  color = "gear"
+) {
+  check_required_packages(c("patchwork"))
+
+  p1 <- plot_track_gears(
+    season = season,
+    round = round,
+    driver = driver1,
+    session = session,
+    color = color,
+    add_labels = FALSE
+  ) +
+    ggplot2::labs(title = driver1)
+
+  p2 <- plot_track_gears(
+    season = season,
+    round = round,
+    driver = driver2,
+    session = session,
+    color = color,
+    add_labels = FALSE
+  ) +
+    ggplot2::labs(title = driver2)
+
+  race_info <- get_race_info(season = season, round = round)
+  race_name <- race_info$race_name[1]
+  circuit_name <- race_info$circuit_name[1]
+
+  combined <- p1 +
+    p2 +
+    patchwork::plot_annotation(
+      title = sprintf("%s - Driver Comparison", circuit_name),
+      subtitle = sprintf("%s - %s", race_name, format(Sys.Date(), "%Y-%m-%d")),
+      caption = "Data: f1dataR | Ergast API"
+    )
+
+  return(combined)
+}
+
 #' Plot track and gears for all races in a season
 #'
 #' @param season Integer, the F1 season year
