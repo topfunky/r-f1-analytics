@@ -56,7 +56,15 @@ jobs:
             topfunky/gghighcontrast
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      
+
+      - name: Cache F1 data
+        uses: actions/cache@v4
+        with:
+          path: data/cache
+          key: f1-data-${{ github.run_id }}
+          restore-keys: |
+            f1-data-
+
       - name: Check R code formatting
         run: |
           # Install air if available (skip if not to avoid CI failure)
