@@ -12,8 +12,8 @@ suppressPackageStartupMessages({
 })
 
 # Configuration
-START_YEAR <- 2022
-END_YEAR <- 2022
+START_YEAR <- 2003
+END_YEAR <- 2003
 OUTPUT_DIR <- "plots"
 MAX_RETRIES <- 3
 RETRY_DELAY <- 2
