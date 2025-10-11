@@ -14,26 +14,15 @@ suppressPackageStartupMessages({
 SEASON <- 2022
 ROUND <- 10
 DRIVER <- "VER"
-CACHE_DIR <- "data/cache"
 OUTPUT_DIR <- "plots"
 
 # Create directories
-dir.create(CACHE_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
-
 
 # Function to get race information
 get_race_info <- function(season, round) {
-  cache_file <- file.path(
-    CACHE_DIR,
-    sprintf("race_info_%d_%d.rds", season, round)
-  )
-
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Load schedule for the season and filter for the specific round
+  # Note: f1dataR handles caching automatically via .Rprofile configuration
   schedule <- load_schedule(season = season)
 
   if (is.null(schedule) || !is.data.frame(schedule) || nrow(schedule) == 0) {
@@ -51,7 +40,6 @@ get_race_info <- function(season, round) {
     ))
   }
 
-  saveRDS(race_info, cache_file)
   return(race_info)
 }
 
@@ -65,7 +53,7 @@ main <- function() {
   cat("\n")
 
   # Get race information
-  cat("Step 1: Fetching race information...\n")
+  cat("Step 1: Loading race information...\n")
   race_info <- get_race_info(SEASON, ROUND)
   race_name <- race_info$race_name[1]
   circuit_name <- race_info$circuit_name[1]

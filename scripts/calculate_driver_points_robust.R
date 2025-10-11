@@ -14,7 +14,6 @@ suppressPackageStartupMessages({
 # Configuration
 START_YEAR <- 2022
 END_YEAR <- 2022
-CACHE_DIR <- "data/cache"
 OUTPUT_DIR <- "plots"
 MAX_RETRIES <- 3
 RETRY_DELAY <- 2
@@ -34,25 +33,15 @@ SCORING_SYSTEM <- c(
 )
 
 # Create directories
-dir.create(CACHE_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Function to fetch race results with retry logic
+# Note: f1dataR handles caching automatically via .Rprofile configuration
 fetch_race_results_with_retry <- function(
   season,
   round,
   max_retries = MAX_RETRIES
 ) {
-  cache_file <- file.path(
-    CACHE_DIR,
-    sprintf("race_results_%s_%s.rds", as.character(season), as.character(round))
-  )
-
-  # Check cache first
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
     results <- load_results(season = season, round = round)
@@ -84,8 +73,6 @@ fetch_race_results_with_retry <- function(
       ) %>%
       select(season, round, driver_id, constructor_id, position, points, status)
 
-    # Save to cache
-    saveRDS(processed_results, cache_file)
     return(processed_results)
   }
 
@@ -93,17 +80,8 @@ fetch_race_results_with_retry <- function(
 }
 
 # Function to get all races for a season with retry logic
+# Note: f1dataR handles caching automatically via .Rprofile configuration
 get_season_races_with_retry <- function(season, max_retries = MAX_RETRIES) {
-  cache_file <- file.path(
-    CACHE_DIR,
-    sprintf("season_races_%s.rds", as.character(season))
-  )
-
-  # Check cache first
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
     schedule <- load_schedule(season = season)
@@ -130,8 +108,6 @@ get_season_races_with_retry <- function(season, max_retries = MAX_RETRIES) {
       arrange(round) %>%
       pull(round)
 
-    # Save to cache
-    saveRDS(races, cache_file)
     return(races)
   }
 
@@ -139,17 +115,8 @@ get_season_races_with_retry <- function(season, max_retries = MAX_RETRIES) {
 }
 
 # Function to get driver names with retry logic
+# Note: f1dataR handles caching automatically via .Rprofile configuration
 get_driver_names_with_retry <- function(season, max_retries = MAX_RETRIES) {
-  cache_file <- file.path(
-    CACHE_DIR,
-    sprintf("drivers_%s.rds", as.character(season))
-  )
-
-  # Check cache first
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
     drivers <- load_drivers(season = season)
@@ -174,8 +141,6 @@ get_driver_names_with_retry <- function(season, max_retries = MAX_RETRIES) {
       select(driver_id, driver_name) %>%
       distinct()
 
-    # Save to cache
-    saveRDS(driver_names, cache_file)
     return(driver_names)
   }
 
@@ -183,20 +148,11 @@ get_driver_names_with_retry <- function(season, max_retries = MAX_RETRIES) {
 }
 
 # Function to get constructor names with retry logic
+# Note: f1dataR handles caching automatically via .Rprofile configuration
 get_constructor_names_with_retry <- function(
   season,
   max_retries = MAX_RETRIES
 ) {
-  cache_file <- file.path(
-    CACHE_DIR,
-    sprintf("constructors_%s.rds", as.character(season))
-  )
-
-  # Check cache first
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Try to fetch with retries
   for (attempt in 1:max_retries) {
     constructors <- load_constructors()
@@ -224,8 +180,6 @@ get_constructor_names_with_retry <- function(
       select(constructor_id, constructor_name = name) %>%
       distinct()
 
-    # Save to cache
-    saveRDS(constructor_names, cache_file)
     return(constructor_names)
   }
 
@@ -261,7 +215,7 @@ calculate_season_points <- function(season) {
 
   for (i in seq_along(races)) {
     round <- races[i]
-    cat(sprintf("  Fetching race %d of %d...\r", i, length(races)))
+    cat(sprintf("  Loading race %d of %d...\r", i, length(races)))
 
     race_results <- fetch_race_results_with_retry(season, round)
 

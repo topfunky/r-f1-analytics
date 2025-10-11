@@ -17,22 +17,14 @@ source("scripts/color_utils.R")
 # Configuration
 START_YEAR <- 2003
 END_YEAR <- 2025
-CACHE_DIR <- "data/cache"
 OUTPUT_DIR <- "plots"
 
 # Create directories
-dir.create(CACHE_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
-# Function to fetch driver standings for a season with caching
+# Function to fetch driver standings for a season
+# Note: f1dataR handles caching automatically via .Rprofile configuration
 fetch_season_standings <- function(season) {
-  cache_file <- file.path(CACHE_DIR, sprintf("standings_%d.rds", season))
-
-  # Check cache first
-  if (file.exists(cache_file)) {
-    return(readRDS(cache_file))
-  }
-
   # Fetch from f1dataR package
   # Load driver standings for the season
   # load_standings returns data with: season, round, driver_id, driver, constructor_id, constructor, position, points, wins
@@ -90,8 +82,6 @@ fetch_season_standings <- function(season) {
     ) %>%
     select(season, driver, team, points)
 
-  # Save to cache
-  saveRDS(result, cache_file)
   return(result)
 }
 
@@ -104,12 +94,12 @@ main <- function() {
   cat(sprintf("Analyzing seasons: %d - %d\n", START_YEAR, END_YEAR))
   cat("\n")
 
-  cat("Step 1: Fetching driver standings data...\n")
+  cat("Step 1: Loading driver standings data...\n")
 
   # Fetch all seasons
   all_standings <- list()
   for (year in START_YEAR:END_YEAR) {
-    cat(sprintf("  Fetching season %d...\r", year))
+    cat(sprintf("  Loading season %d...\r", year))
     standings <- fetch_season_standings(year)
     if (!is.null(standings)) {
       all_standings[[as.character(year)]] <- standings
@@ -120,14 +110,14 @@ main <- function() {
   cat("\n")
 
   cat(sprintf(
-    "✓ Successfully fetched data for %d seasons\n",
+    "✓ Successfully loaded data for %d seasons\n",
     length(all_standings)
   ))
 
   # Check if we have any data at all
   if (length(all_standings) == 0) {
     stop(
-      "No data could be fetched for any season. Please check your internet connection and API availability."
+      "No data could be loaded for any season. Please check your internet connection and API availability."
     )
   }
 
