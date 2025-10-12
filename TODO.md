@@ -1,9 +1,12 @@
 # TODO
 
-- Optimize GitHub Action to use cached f1 data between runs
 - Use Google Fonts https://www.geeksforgeeks.org/r-language/how-to-implement-google-fonts-in-ggplot2-graphs-using-r/
 - Use historical re-calculation of scores when comparing driver pair performance across seasons
 - Use weighted 24 season score for short seasons and seasons in process when comparing driver pair performance 
+- Plot gear use of top five finishers in a race
+- Plot gear use of a single driver in the same race in six different years
+- Fix f1dataR colors so that a specific gear is always the same color in all plots
+- Plot or generate table of % of each gear used in race and correlation to lap times
 
 ## Brief API Reference
 
