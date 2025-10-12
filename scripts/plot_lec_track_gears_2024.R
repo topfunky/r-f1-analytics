@@ -15,7 +15,7 @@ source("R/plot_functions.R")
 
 # Configuration
 SEASON <- 2024
-ROUND <- 16
+ROUND <- 16 # Monza
 DRIVER <- "LEC"
 OUTPUT_DIR <- "plots"
 

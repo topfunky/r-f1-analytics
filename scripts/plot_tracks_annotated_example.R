@@ -10,8 +10,8 @@ library(patchwork)
 source("R/plot_functions.R")
 
 # Configuration
-season <- 2024
-driver <- "LEC"
+season <- 2022
+driver <- "VER"
 rounds <- 1:6 # First 6 races of the season
 title <- sprintf("Early Season Performance - %s", driver)
 subtitle <- sprintf("%d Season Opening Rounds", season)

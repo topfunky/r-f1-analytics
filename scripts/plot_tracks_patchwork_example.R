@@ -10,7 +10,7 @@ library(patchwork)
 source("R/plot_functions.R")
 
 # Configuration
-season <- 2024
+season <- 2022
 driver <- "VER"
 rounds <- c(1, 5, 10, 15) # Bahrain, China, Austria, Belgium
 output_file <- sprintf("plots/tracks_patchwork_%s_%d.png", driver, season)

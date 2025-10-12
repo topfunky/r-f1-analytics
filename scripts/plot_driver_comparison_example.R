@@ -10,7 +10,7 @@ library(patchwork)
 source("R/plot_functions.R")
 
 # Configuration
-season <- 2024
+season <- 2022
 round <- 1 # Bahrain GP
 driver1 <- "VER"
 driver2 <- "PER"

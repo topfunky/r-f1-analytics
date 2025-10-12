@@ -10,8 +10,8 @@ library(patchwork)
 source("R/plot_functions.R")
 
 # Configuration
-season <- 2024
-driver <- "NOR"
+season <- 2022
+driver <- "VER"
 output_file <- sprintf("plots/patchwork_advanced_%s_%d.png", driver, season)
 
 cat(sprintf(
