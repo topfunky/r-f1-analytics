@@ -1,22 +1,5 @@
 # F1 Track and Gears Plotting Functions
 
-# Constants ---------------------------------------------------------------
-
-#' Fixed gear color palette for consistency across all plots
-#' Gears 1-8 mapped to high contrast colors
-#' Ensures gear 2 is always red and gear 8 is always cream, regardless of
-#' whether all gears are present in the data
-GEAR_COLORS <- c(
-  "1" = "#4477AA", # Blue
-  "2" = "#EE6677", # Red
-  "3" = "#228833", # Green
-  "4" = "#CCBB44", # Yellow
-  "5" = "#66CCEE", # Cyan
-  "6" = "#AA3377", # Purple
-  "7" = "#BBBBBB", # Gray
-  "8" = "#EECC66"  # Cream
-)
-
 # Helper Functions --------------------------------------------------------
 
 #' Check if required packages are installed
@@ -118,19 +101,6 @@ add_high_contrast_theme <- function(p) {
     )
 }
 
-#' Apply fixed gear color scale to plot
-#'
-#' @param p ggplot object
-#' @return ggplot object with fixed gear colors applied
-apply_gear_colors <- function(p) {
-  p + ggplot2::scale_color_manual(
-    values = GEAR_COLORS,
-    name = "Gear",
-    drop = FALSE,
-    limits = names(GEAR_COLORS)
-  )
-}
-
 # Main Plotting Functions -------------------------------------------------
 
 #' Plot track and gears for a single race
@@ -156,48 +126,13 @@ plot_track_gears <- function(
   race_name <- race_info$race_name[1]
   circuit_name <- race_info$circuit_name[1]
 
-  # Load telemetry data
-  telemetry <- load_race_telemetry(season, round, driver, session)
-
-  if (is.null(telemetry) || nrow(telemetry) == 0) {
-    stop(sprintf(
-      "No telemetry data found for driver %s in season %d, round %d",
-      driver,
-      season,
-      round
-    ))
-  }
-
-  # Convert gear to factor if coloring by gear
-  if (color == "gear") {
-    telemetry$gear <- factor(
-      telemetry$gear,
-      levels = names(GEAR_COLORS)
-    )
-  }
-
-  # Create plot
-  p <- ggplot2::ggplot(
-    telemetry,
-    ggplot2::aes(x = x, y = y, color = .data[[color]])
-  ) +
-    ggplot2::geom_path(linewidth = 1) +
-    ggplot2::coord_fixed()
-
-  # Apply fixed gear colors if coloring by gear
-  if (color == "gear") {
-    p <- apply_gear_colors(p)
-  }
-
-  # Apply theme
-  p <- p +
-    ggplot2::theme_minimal() +
-    ggplot2::theme(
-      axis.title = ggplot2::element_blank(),
-      axis.text = ggplot2::element_blank(),
-      axis.ticks = ggplot2::element_blank(),
-      panel.grid = ggplot2::element_blank()
-    )
+  p <- f1dataR::plot_fastest(
+    season = season,
+    round = round,
+    driver = driver,
+    session = session,
+    color = color
+  )
 
   if (add_labels) {
     p <- p +
@@ -282,28 +217,13 @@ prepare_facet_data <- function(combined_data) {
 #' @param color String, what to color by
 #' @return ggplot object
 create_faceted_plot <- function(combined_data, color) {
-  # Convert gear to factor if coloring by gear
-  if (color == "gear") {
-    combined_data$gear <- factor(
-      combined_data$gear,
-      levels = names(GEAR_COLORS)
-    )
-  }
-
-  p <- ggplot2::ggplot(
+  ggplot2::ggplot(
     combined_data,
     ggplot2::aes(x = x, y = y, color = .data[[color]])
   ) +
     ggplot2::geom_path(linewidth = 0.8) +
     ggplot2::facet_wrap(~circuit_name) +
     ggplot2::coord_fixed()
-
-  # Apply fixed gear colors if coloring by gear
-  if (color == "gear") {
-    p <- apply_gear_colors(p)
-  }
-
-  return(p)
 }
 
 #' Add labels to season plot
