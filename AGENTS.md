@@ -250,6 +250,18 @@ remotes::install_github("SCasanova/f1dataR", force = TRUE)
 
 ## AI Agent Behavior Expectations
 
+### Allowed Commands
+
+The following commands are explicitly allowed and should be used when appropriate:
+
+- `jj status` - Check the current state of the jujutsu repository
+- `jj diff` - Show differences between working copy and committed changes
+- `jj log` - Display commit history and change information
+- `make format` - Format R files and shell scripts
+- `make format-check` - Check formatting without modifying files
+
+These commands are essential for understanding the current state of the repository and following the development workflow outlined in this document.
+
 ### Core Principles
 1. **Be Proactive**: Suggest relevant analyses based on recent F1 events
 1. **Explain Decisions**: Comment why certain visualizations or statistics are chosen
