@@ -2,8 +2,8 @@
 
 help:
 	@echo "Available targets:"
-	@echo "  format        - Format all R files using air"
-	@echo "  format-check  - Check R file formatting without modifying"
+	@echo "  format        - Format all R files using air and shell scripts using shfmt"
+	@echo "  format-check  - Check R file and shell script formatting without modifying"
 	@echo "  plots         - Generate all plots"
 	@echo "  clean         - Remove generated plots"
 	@echo "  clean-cache   - Remove data cache files"
@@ -18,16 +18,20 @@ help:
 	@echo "  renv-update   - Update packages to latest versions"
 	@echo "  renv-clean    - Remove unused packages from renv cache"
 
-# Format all R source files with air
+# Format all R source files with air and shell scripts with shfmt
 format:
 	@echo "Formatting R files with air..."
 	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air format {}
+	@echo "Formatting shell scripts with shfmt..."
+	@find . -name "*.sh" -not -path "*/renv/*" -not -path "*/NULL/*" | xargs shfmt --write
 	@echo "Formatting complete!"
 
 # Check formatting without modifying files
 format-check:
 	@echo "Checking R file formatting..."
 	@find . -name "*.R" -not -path "*/renv/*" -not -path "*/.Rproj.user/*" | xargs -I {} air format --check {}
+	@echo "Checking shell script formatting..."
+	@find . -name "*.sh" -not -path "*/renv/*" -not -path "*/NULL/*" | xargs shfmt --diff
 
 # Generate all plots
 plots:

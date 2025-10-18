@@ -3,7 +3,7 @@
 # Install R from CRAN on Ubuntu
 # Based on instructions from https://learnubuntu.com/install-r/
 
-set -e  # Exit on error
+set -e # Exit on error
 
 echo "Installing R from CRAN..."
 
