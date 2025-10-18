@@ -77,9 +77,17 @@ r-f1-analytics/
 ### Version Control with Jujutsu (jj)
 
 #### Commit Messages
-- Use descriptive change descriptions
-- Format: "Add/Update/Fix: brief description"
-- Example: `jj describe -m "Add qualifying pace comparison plot"`
+- Follow conventional commits specification
+- Format: `<type>: <description>`
+- Types: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
+- Examples:
+  - `jj describe -m "feat: add qualifying pace comparison plot"`
+  - `jj describe -m "fix: correct lap time calculation for sprint races"`
+  - `jj describe -m "docs: update README with new analysis descriptions"`
+  - `jj describe -m "style: improve plot color scheme for accessibility"`
+  - `jj describe -m "refactor: extract common plotting functions"`
+  - `jj describe -m "test: add validation for edge cases in race data"`
+  - `jj describe -m "chore: update package dependencies"`
 
 #### Workflow
 1. Use `jj` commands for local operations
@@ -88,6 +96,44 @@ r-f1-analytics/
 1. Use `jj git push` to push to remote when ready
 1. Squash experimental changes before pushing to main
 1. Keep main branch clean and tested
+
+#### Commit Verification
+- **Always verify with user before creating commits** unless running in CI environment
+- In CI/CD pipelines, commits may be created automatically without user confirmation
+- For local development, ask user permission before executing `jj commit` or `jj describe` commands
+- This ensures user has reviewed changes before they are committed to version control
+
+#### Jujutsu Commit Process
+When creating commits with jj, follow this structured approach:
+
+1. **Analyze current state** (run in parallel):
+   - `jj status` to see all modified/added files
+   - `jj diff` to see both staged and unstaged changes
+   - `jj log -r 'all()' --limit 10` to see recent commit messages for style consistency
+
+2. **Draft commit message** following conventional commits:
+   - Format: `type: brief description`
+   - Types: `feat:`, `fix:`, `perf:`, `refactor:`, `docs:`, `test:`, `chore:`, `devops:`
+   - Focus on "why" not just "what"
+   - Be concise but descriptive (1-2 sentences)
+   - Match style of recent commits
+
+3. **Execute commit** (run in sequence):
+   - `make format` to format all R script files consistently
+   - `jj commit -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"` using HEREDOC format
+
+4. **Trust the process** - do not run verification commands afterwards
+
+**Important Notes:**
+- ALWAYS use HEREDOC format for commit messages to ensure proper formatting
+- DO NOT ask user for confirmation - analyze changes and create commit
+- Keep commit messages focused and meaningful
+
+**Example commit message formats:**
+- `feat: add qualifying pace comparison plot`
+- `fix: correct lap time calculation for sprint races`
+- `perf: optimize data caching to reduce API calls`
+- `refactor: simplify driver standings visualization code`
 
 ### Testing & Validation
 1. Verify plots render correctly before committing
