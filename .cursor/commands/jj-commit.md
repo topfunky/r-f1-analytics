@@ -1,54 +1,43 @@
----
-title: Commit with Jujutsu
-description: Commit changes using jj with guided message formatting
-authors:
-  - F1 Analytics Team
-tags:
-  - git
-  - version-control
-  - jujutsu
----
+# JJ Conventional Commit
 
-# Commit with Jujutsu
+Create a jj commit using conventional commit style.
 
-## Details
+## Instructions
 
-You are helping commit changes using Jujutsu (jj) version control.
+1. Run `jj status` to check current changes
+2. Run `jj diff` to view all changes (with appropriate timeout for large diffs)
+3. Run `jj log -r @- -n 5` to check recent commit message style
+4. Analyze all changes carefully:
+   - Determine the appropriate type (feat, fix, docs, style, refactor, test, chore)
+   - Identify the scope based on affected components
+   - Draft a clear, concise summary
+   - Include bullet points in the body describing key changes
+5. Commit atomically using heredoc format:
+   ```bash
+   jj commit -m "$(cat <<'EOF'
+   <type>(<scope>): <summary>
+   
+   <body with bullet points>
+   EOF
+   )"
+   ```
+6. Print the output of the `commit` command so the user can see what happened
+7. Clean up any temporary files created during the diff process
 
-Follow these steps carefully:
+## Conventional Commit Types
 
-1. Run these commands in parallel to understand the current state:
-   - `jj status` to see all modified/added files
-   - `jj diff` to see both staged and unstaged changes
-   - `jj log -r 'all()' --limit 10` to see recent commit messages for style consistency
+- `feat`: new feature
+- `fix`: bug fix
+- `docs`: documentation changes
+- `ci`: improvements to continuous integration tasks
+- `style`: formatting changes
+- `refactor`: code refactoring
+- `test`: adding tests
+- `chore`: maintenance tasks
 
-2. Analyze all changes and draft a commit message that:
-   - Follows the format: "type: brief description" where type is one of:
-     - `feat:` for new features
-     - `fix:` for bug fixes
-     - `perf:` for performance improvements
-     - `refactor:` for code refactoring
-     - `docs:` for documentation changes
-     - `test:` for test changes
-     - `chore:` for maintenance tasks
-     - `devops:` for CI/CD and infrastructure
-   - Summarizes the nature and purpose of changes (focus on "why" not just "what")
-   - Is concise but descriptive (1-2 sentences summary, with optional bullet points for complex changes)
-   - Matches the style of recent commits in the repository
+## Notes
 
-3. Run these commands in sequence:
-   - Run `make format` to format all R script files consistently
-   - Create the commit and a new empty change with one command: `jj commit -m "$(cat <<'EOF'\nCommit message here\nEOF\n)"`
-
-4. Trust that the commit was created successfully; do not run verification commands afterwards.
-
-IMPORTANT:
-- ALWAYS use the HEREDOC format for commit messages to ensure proper formatting
-- DO NOT ask the user for confirmation - analyze the changes and create the commit
-- Keep commit messages focused and meaningful
-
-Example commit message formats:
-- "feat: add qualifying pace comparison plot"
-- "fix: correct lap time calculation for sprint races"
-- "perf: optimize data caching to reduce API calls"
-- "refactor: simplify driver standings visualization code"
+- Use scope to indicate affected component (e.g., bash, jj, nushell, helix)
+- Summary should be present tense, lowercase, no period
+- Body should explain what and why, not how
+- Include context for future maintainers
