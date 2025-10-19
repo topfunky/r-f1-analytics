@@ -5,6 +5,14 @@
 
 set -euo pipefail
 
+# Create temporary files
+DIFF_FILE=$(mktemp)
+PROMPT_FILE=$(mktemp)
+COMMIT_MSG_FILE=$(mktemp)
+
+# Ensure temporary files are cleaned up on exit
+trap 'rm -f "$DIFF_FILE" "$PROMPT_FILE" "$COMMIT_MSG_FILE"' EXIT
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -57,13 +65,13 @@ fi
 print_info "Checking for changes to commit..."
 
 # Get the current diff
-if ! jj diff >/tmp/jj_diff.txt 2>/dev/null; then
+if ! jj diff >"$DIFF_FILE" 2>/dev/null; then
 	print_error "Failed to get diff from jj. Make sure you're in a jujutsu repository."
 	exit 1
 fi
 
 # Check if there are any changes
-if [ ! -s /tmp/jj_diff.txt ]; then
+if [ ! -s "$DIFF_FILE" ]; then
 	print_warning "No changes detected. Nothing to commit."
 	exit 0
 fi
@@ -71,15 +79,15 @@ fi
 print_info "Found changes. Generating commit message with cursor-agent..."
 
 # Create a simple prompt and save to file
-cat >/tmp/commit_prompt.txt <<EOF
+cat >"$PROMPT_FILE" <<EOF
 Run `jj status` to see a list of changed files. Generate a conventional commit message for the following diff. Include bullet points with more details for complicated changes:
 
-$(cat /tmp/jj_diff.txt)
+$(cat "$DIFF_FILE")
 EOF
 
 # Generate commit message using cursor-agent with timeout
 print_info "Calling cursor-agent to generate commit message..."
-if timeout 30 cursor-agent --force --print "$(cat /tmp/commit_prompt.txt)" >/tmp/generated_commit_message.txt 2>/dev/null; then
+if timeout 30 cursor-agent --force --print "$(cat "$PROMPT_FILE")" >"$COMMIT_MSG_FILE" 2>/dev/null; then
 	print_info "Successfully generated commit message"
 else
 	print_error "Failed to generate commit message with cursor-agent (timeout or error)."
@@ -88,16 +96,16 @@ else
 fi
 
 # Extract the commit message from the response
-COMMIT_MESSAGE=$(grep -E "^(feat|fix|docs|style|refactor|perf|test|chore|devops):" /tmp/generated_commit_message.txt | head -n 1 | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+COMMIT_MESSAGE=$(grep -E "^(feat|fix|docs|style|refactor|perf|test|chore|devops):" "$COMMIT_MSG_FILE" | head -n 1 | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 
 # If no conventional commit found, try to extract from code blocks
 if [ -z "$COMMIT_MESSAGE" ]; then
-	COMMIT_MESSAGE=$(grep -A 1 -B 1 "\`\`\`" /tmp/generated_commit_message.txt | grep -E "^(feat|fix|docs|style|refactor|perf|test|chore|devops):" | head -n 1 | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+	COMMIT_MESSAGE=$(grep -A 1 -B 1 "\`\`\`" "$COMMIT_MSG_FILE" | grep -E "^(feat|fix|docs|style|refactor|perf|test|chore|devops):" | head -n 1 | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 fi
 
 # If still no conventional commit found, take the first line and clean it up
 if [ -z "$COMMIT_MESSAGE" ]; then
-	COMMIT_MESSAGE=$(head -n 1 /tmp/generated_commit_message.txt | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+	COMMIT_MESSAGE=$(head -n 1 "$COMMIT_MSG_FILE" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 fi
 
 # Validate the commit message format
@@ -131,16 +139,13 @@ fi
 # Create the commit
 print_info "Creating commit with jj..."
 if jj commit -m "$COMMIT_MESSAGE"; then
-	print_success "Commit created successfully!"
-	echo
+	print_success "Commit created successfully!\n"
+	
 	print_info "=== COMMIT DETAILS ==="
-	jj log -r '@' --limit 1
+	jj log -r '@-' --limit 1
 else
 	print_error "Failed to create commit."
 	exit 1
 fi
-
-# Clean up temporary files
-rm -f /tmp/jj_diff.txt /tmp/commit_prompt.txt /tmp/generated_commit_message.txt
 
 print_success "Done!"
