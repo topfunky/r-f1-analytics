@@ -72,30 +72,19 @@ print_info "Found changes. Generating commit message with cursor-agent..."
 
 # Create a simple prompt and save to file
 cat >/tmp/commit_prompt.txt <<EOF
-Generate a conventional commit message for this diff:
+Run `jj status` to see a list of changed files. Generate a conventional commit message for the following diff. Include bullet points with more details for complicated changes:
 
 $(cat /tmp/jj_diff.txt)
 EOF
 
 # Generate commit message using cursor-agent with timeout
 print_info "Calling cursor-agent to generate commit message..."
-if timeout 30 cursor-agent --print "$(cat /tmp/commit_prompt.txt)" >/tmp/generated_commit_message.txt 2>/dev/null; then
+if timeout 30 cursor-agent --force --print "$(cat /tmp/commit_prompt.txt)" >/tmp/generated_commit_message.txt 2>/dev/null; then
 	print_info "Successfully generated commit message"
 else
 	print_error "Failed to generate commit message with cursor-agent (timeout or error)."
-	print_info "Falling back to manual commit message generation..."
 
-	# Fallback: generate a simple commit message based on file changes
-	if grep -q "Added executable file" /tmp/jj_diff.txt; then
-		COMMIT_MESSAGE="feat: add new shell script"
-	elif grep -q "Modified file" /tmp/jj_diff.txt; then
-		COMMIT_MESSAGE="fix: update existing file"
-	else
-		COMMIT_MESSAGE="chore: update project files"
-	fi
-
-	print_info "Using fallback commit message: $COMMIT_MESSAGE"
-	echo "$COMMIT_MESSAGE" >/tmp/generated_commit_message.txt
+  exit 1
 fi
 
 # Extract the commit message from the response
