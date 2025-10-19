@@ -65,6 +65,16 @@ jobs:
           restore-keys: |
             f1-data-
 
+      - name: Install Nushell
+        run: |
+          # Download and install Nushell from GitHub releases
+          NUSHELL_VERSION="0.99.1"
+          wget -q https://github.com/nushell/nushell/releases/download/${NUSHELL_VERSION}/nu-${NUSHELL_VERSION}-x86_64-linux-gnu-full.tar.gz
+          tar xzf nu-${NUSHELL_VERSION}-x86_64-linux-gnu-full.tar.gz
+          sudo mv nu-${NUSHELL_VERSION}-x86_64-linux-gnu-full/nu /usr/local/bin/
+          rm -rf nu-${NUSHELL_VERSION}-x86_64-linux-gnu-full*
+          nu --version
+      
       - name: Check R code formatting
         run: |
           # Install air if available (skip if not to avoid CI failure)
@@ -76,8 +86,8 @@ jobs:
       
       - name: Run plot generation scripts
         run: |
-          chmod +x bin/render_all_plots.sh
-          ./bin/render_all_plots.sh
+          chmod +x bin/render_all_plots.nu
+          ./bin/render_all_plots.nu
       
       - name: Prepare staging directory
         run: |

@@ -8,7 +8,8 @@ This is an R-based F1 analytics project that uses the `f1dataR` package to fetch
 ## Project Structure
 ```
 r-f1-analytics/
-├── scripts/           # R scripts for data analysis and plotting
+├── bin/              # Nushell utility scripts
+├── scripts/          # R scripts for data analysis and plotting
 ├── plots/            # Generated plot outputs (gitignored)
 ├── data/             # Cached data files (gitignored)
 ├── .github/          # GitHub Actions workflows
@@ -18,6 +19,7 @@ r-f1-analytics/
 
 ## Technology Stack
 - **Language**: R (4.3.2+)
+- **Utility Scripts**: Nushell (for bin/ scripts)
 - **Key Package**: `f1dataR` - https://scasanova.github.io/f1dataR/
 - **Visualization**: ggplot2, plotly
 - **Data Manipulation**: dplyr, tidyr
@@ -38,6 +40,15 @@ r-f1-analytics/
 
 ### Markdown Style
 1. Use `1.` for all ordered lists; do not number items sequentially 
+
+### Utility Scripts
+1. Use Nushell for all utility scripts in `bin/` directory
+1. Nushell provides structured data handling, better error handling, and cross-platform compatibility
+1. Scripts should have `.nu` extension (e.g., `render_all_plots.nu`)
+1. Use `#!/usr/bin/env nu` shebang
+1. Leverage Nushell's structured data types (lists, records, tables) instead of string parsing
+1. Use built-in `ansi` command for colored output instead of escape codes
+1. Make scripts executable with `chmod +x`
 
 ### File Naming Conventions
 - Scripts: `verb_subject.R` (e.g., `plot_lap_times.R`, `analyze_race_results.R`)
@@ -140,7 +151,7 @@ When creating commits with jj, follow this structured approach:
 1. Test scripts with different seasons/races/drivers
 1. Handle edge cases (e.g., sprint races, DSQ, DNS, canceled races)
 1. Validate data integrity before plotting
-1. Run `scripts/render_all_plots.sh` before major commits
+1. Run `bin/render_all_plots.nu` (or `.sh`) before major commits
 
 ## Common Tasks
 
@@ -154,7 +165,9 @@ When creating commits with jj, follow this structured approach:
 
 ### Running All Plots
 ```bash
-./scripts/render_all_plots.sh
+./bin/render_all_plots.nu
+# or use the bash version
+./bin/render_all_plots.sh
 ```
 
 ### Manual Plot Generation
@@ -284,6 +297,7 @@ These commands are essential for understanding the current state of the reposito
 - **ggplot2 Documentation**: https://ggplot2.tidyverse.org/
 - **Tidyverse Style Guide**: https://www.tidyverse.org/
 - **Jujutsu VCS**: https://github.com/martinvonz/jj
+- **Nushell**: https://www.nushell.sh/
 - **High Contrast Theme**: https://github.com/topfunky/gghighcontrast
 
 ## Contact & Contribution
