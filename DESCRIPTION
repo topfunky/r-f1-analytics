@@ -1,0 +1,29 @@
+Package: rf1analytics
+Title: R F1 Analytics Project
+Version: 0.1.0
+Authors@R: person("F1 Analytics", "Team", email = "f1@example.com", role = c("aut", "cre"))
+Description: Formula 1 data analysis and visualization using f1dataR.
+License: MIT
+Encoding: UTF-8
+Depends:
+    R (>= 4.3.0)
+Imports:
+    ggplot2,
+    dplyr,
+    tidyr,
+    lubridate,
+    scales,
+    readr,
+    tibble,
+    stringr,
+    purrr,
+    viridis,
+    RColorBrewer,
+    ggrepel,
+    patchwork,
+    curl,
+    httr2
+Remotes:
+    SCasanova/f1dataR
+Suggests:
+    remotes

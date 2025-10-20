@@ -99,3 +99,5 @@ packrat/
 
 # f1dataR cache
 .f1dataR_cache/
+Rplots.pdf
+
