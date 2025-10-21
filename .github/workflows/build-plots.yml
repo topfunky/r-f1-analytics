@@ -54,10 +54,9 @@ jobs:
             any::tidyr
             SCasanova/f1dataR
             topfunky/gghighcontrast
-        run: |
-          install.packages(c('remotes', 'ggplot2', 'dplyr', 'tidyr', 'scales'))
-          remotes::install_github('SCasanova/f1dataR', auth_token = Sys.getenv('GITHUB_PAT'))
-        shell: Rscript {0}
+            any::ggplot2
+            any::dplyr
+            any::scales
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
