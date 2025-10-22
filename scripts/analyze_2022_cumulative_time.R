@@ -117,43 +117,40 @@ calculate_race_times <- function(results_df) {
   return(results_df)
 }
 
-# Main execution
-main <- function() {
-  cat("\n")
-  cat("==========================================================\n")
-  cat("F1 2022 Season - Cumulative Time Distance Analysis\n")
-  cat("==========================================================\n")
-  cat(sprintf("Season: %d\n", SEASON))
-  cat("\n")
-  
-  # Step 1: Fetch race schedule for 2022
-  cat("Step 1: Fetching 2022 race schedule...\n")
-  cache_file <- file.path(CACHE_DIR, sprintf("schedule_%d.rds", SEASON))
-  schedule <- fetch_with_cache(load_schedule, cache_file, season = SEASON)
+# Function: Fetch race schedule data
+fetch_race_schedule <- function(season) {
+  cat("Step 1: Fetching race schedule...\n")
+  cache_file <- file.path(CACHE_DIR, sprintf("schedule_%d.rds", season))
+  schedule <- fetch_with_cache(load_schedule, cache_file, season = season)
   
   num_races <- nrow(schedule)
-  cat(sprintf("  Found %d races in %d season\n", num_races, SEASON))
+  cat(sprintf("  Found %d races in %d season\n", num_races, season))
   
-  # Step 2: Fetch race results for all races
+  return(schedule)
+}
+
+# Function: Fetch all race results
+fetch_all_race_results <- function(schedule, season) {
   cat("\nStep 2: Fetching race results for all races...\n")
   all_results <- data.frame()
+  num_races <- nrow(schedule)
   
   for (i in 1:num_races) {
     round_num <- as.numeric(schedule$round[i])
-        race_name <- schedule$race_name[i]
-        
-        cat(sprintf("  [%d/%d] Fetching results for %s (Round %d)...\n", 
-                    i, num_races, race_name, round_num))
-        
+    race_name <- schedule$race_name[i]
+    
+    cat(sprintf("  [%d/%d] Fetching results for %s (Round %d)...\n", 
+                i, num_races, race_name, round_num))
+    
     cache_file <- file.path(
       CACHE_DIR, 
-      sprintf("results_%d_round%d.rds", SEASON, round_num)
+      sprintf("results_%d_round%d.rds", season, round_num)
     )
-        
+    
     race_results <- fetch_with_cache(
       load_results, 
       cache_file, 
-      season = SEASON, 
+      season = season, 
       round = round_num
     )
     
@@ -168,9 +165,12 @@ main <- function() {
   }
   
   cat(sprintf("  Successfully fetched results for %d races\n", num_races))
-  
-  # Step 3: Calculate cumulative time differences
-  cat("\nStep 3: Calculating cumulative time differences...\n")
+  return(all_results)
+}
+
+# Function: Calculate race times and time differences
+calculate_race_time_differences <- function(all_results) {
+  cat("\nStep 3: Calculating race time differences...\n")
   
   # Calculate total race times for all drivers
   all_results_with_times <- all_results %>%
@@ -197,6 +197,13 @@ main <- function() {
       time_behind = time_seconds - winner_time
     ) %>%
     select(round, race_name, driver_id, position, time_behind)
+  
+  return(race_times_behind)
+}
+
+# Function: Calculate cumulative time differences
+calculate_cumulative_times <- function(race_times_behind) {
+  cat("\nStep 4: Calculating cumulative time differences...\n")
   
   # Calculate cumulative time differences
   cumulative_times <- race_times_behind %>%
@@ -232,8 +239,16 @@ main <- function() {
     ) %>%
     select(round, race_name, driver_id, cumulative_time_behind, distance_from_fastest)
   
-  # Step 4: Create wide format table
-  cat("\nStep 4: Creating cumulative distance table...\n")
+  return(list(
+    cumulative_distance = cumulative_distance,
+    fastest_driver_id = fastest_driver_id,
+    fastest_driver_time = fastest_driver_time
+  ))
+}
+
+# Function: Create and export distance table
+create_distance_table <- function(cumulative_distance) {
+  cat("\nStep 5: Creating cumulative distance table...\n")
   
   distance_table <- cumulative_distance %>%
     select(round, race_name, driver_id, distance_from_fastest) %>%
@@ -253,8 +268,15 @@ main <- function() {
   cat("\nTable Preview (first 5 races):\n")
   print(head(distance_table, 5))
   
-  # Step 5: Create visualization
-  cat("\nStep 5: Creating visualization...\n")
+  return(list(
+    table = distance_table,
+    output_csv = output_csv
+  ))
+}
+
+# Function: Create visualization
+create_visualization <- function(cumulative_distance, fastest_driver_id) {
+  cat("\nStep 6: Creating visualization...\n")
   
   # Get top drivers to plot (those with most races)
   top_drivers <- cumulative_distance %>%
@@ -307,8 +329,11 @@ main <- function() {
   )
   
   cat(sprintf("✓ Plot saved to: %s\n", output_plot))
-  
-  # Print summary statistics
+  return(output_plot)
+}
+
+# Function: Print summary statistics
+print_summary_statistics <- function(cumulative_distance) {
   cat("\n==========================================================\n")
   cat("Final Cumulative Time Distance (Top 10 Regular Drivers):\n")
   cat("==========================================================\n")
@@ -324,7 +349,10 @@ main <- function() {
     head(10)
   
   print(final_summary, row.names = FALSE)
-  
+}
+
+# Function: Print analysis completion message
+print_completion_message <- function(output_csv, output_plot) {
   cat("\n")
   cat("==========================================================\n")
   cat("Analysis complete!\n")
@@ -334,6 +362,43 @@ main <- function() {
   cat(sprintf("  - CSV table: %s\n", output_csv))
   cat(sprintf("  - Visualization: %s\n", output_plot))
   cat("\n")
+}
+
+# Main execution function
+main <- function() {
+  cat("\n")
+  cat("==========================================================\n")
+  cat("F1 2022 Season - Cumulative Time Distance Analysis\n")
+  cat("==========================================================\n")
+  cat(sprintf("Season: %d\n", SEASON))
+  cat("\n")
+  
+  # Step 1: Fetch race schedule
+  schedule <- fetch_race_schedule(SEASON)
+  
+  # Step 2: Fetch all race results
+  all_results <- fetch_all_race_results(schedule, SEASON)
+  
+  # Step 3: Calculate race time differences
+  race_times_behind <- calculate_race_time_differences(all_results)
+  
+  # Step 4: Calculate cumulative times
+  cumulative_data <- calculate_cumulative_times(race_times_behind)
+  cumulative_distance <- cumulative_data$cumulative_distance
+  fastest_driver_id <- cumulative_data$fastest_driver_id
+  
+  # Step 5: Create distance table
+  table_data <- create_distance_table(cumulative_distance)
+  output_csv <- table_data$output_csv
+  
+  # Step 6: Create visualization
+  output_plot <- create_visualization(cumulative_distance, fastest_driver_id)
+  
+  # Step 7: Print summary statistics
+  print_summary_statistics(cumulative_distance)
+  
+  # Step 8: Print completion message
+  print_completion_message(output_csv, output_plot)
 }
 
 # Run main function
