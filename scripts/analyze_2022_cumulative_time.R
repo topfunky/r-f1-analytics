@@ -35,6 +35,88 @@ fetch_with_cache <- function(fetch_func, cache_file, ...) {
   return(data)
 }
 
+# Helper function: Parse race time from gap column
+parse_race_time <- function(gap_value) {
+  if (is.na(gap_value)) {
+    return(NA)
+  }
+  
+  # Check if it's the winner's time (format: "H:MM:SS.sss")
+  if (grepl("^\\d+:\\d{2}:\\d{2}\\.\\d+$", gap_value)) {
+    # Parse winner's total race time
+    parts <- strsplit(gap_value, ":")[[1]]
+    hours <- as.numeric(parts[1])
+    minutes <- as.numeric(parts[2])
+    seconds <- as.numeric(parts[3])
+    return(hours * 3600 + minutes * 60 + seconds)
+  }
+  
+  # Check if it's a gap time in seconds (format: "+SS.sss" or "SS.sss")
+  if (grepl("^\\+?\\d+\\.\\d+$", gap_value)) {
+    # This is a gap in seconds - we'll need the winner's time to calculate total
+    return(NA)  # Will be calculated later
+  }
+  
+  # Check if it's a gap time in minutes:seconds (format: "+M:SS.sss")
+  if (grepl("^\\+\\d+:\\d{2}\\.\\d+$", gap_value)) {
+    # This is a gap in minutes:seconds - we'll need the winner's time to calculate total
+    return(NA)  # Will be calculated later
+  }
+  
+  return(NA)
+}
+
+# Helper function: Convert gap to seconds (vectorized)
+gap_to_seconds <- function(gap_values) {
+  sapply(gap_values, function(gap_value) {
+    if (is.na(gap_value)) {
+      return(NA)
+    }
+    
+    # Handle gaps in seconds format (+SS.sss)
+    if (grepl("^\\+?\\d+\\.\\d+$", gap_value)) {
+      return(as.numeric(gsub("\\+", "", gap_value)))
+    }
+    
+    # Handle gaps in minutes:seconds format (+M:SS.sss)
+    if (grepl("^\\+\\d+:\\d{2}\\.\\d+$", gap_value)) {
+      gap_parts <- strsplit(gsub("\\+", "", gap_value), ":")[[1]]
+      gap_minutes <- as.numeric(gap_parts[1])
+      gap_seconds <- as.numeric(gap_parts[2])
+      return(gap_minutes * 60 + gap_seconds)
+    }
+    
+    return(NA)
+  })
+}
+
+# Helper function: Calculate total race time for all drivers
+calculate_race_times <- function(results_df) {
+  # Find winner's total time
+  winner_gap <- results_df[results_df$position == "1", ]$gap[1]
+  winner_time_sec <- parse_race_time(winner_gap)
+  
+  if (is.na(winner_time_sec)) {
+    return(results_df)
+  }
+  
+  # Calculate total race time for each driver
+  results_df <- results_df %>%
+    mutate(
+      gap_seconds = case_when(
+        position == "1" ~ 0,  # Winner has no gap
+        TRUE ~ gap_to_seconds(gap)
+      ),
+      total_race_time_sec = case_when(
+        !is.na(gap_seconds) ~ winner_time_sec + gap_seconds,
+        TRUE ~ NA_real_
+      )
+    ) %>%
+    select(-gap_seconds)  # Remove the helper column
+  
+  return(results_df)
+}
+
 # Main execution
 main <- function() {
   cat("\n")
@@ -90,12 +172,18 @@ main <- function() {
   # Step 3: Calculate cumulative time differences
   cat("\nStep 3: Calculating cumulative time differences...\n")
   
-  # Prepare race results with time in seconds
-  race_times <- all_results %>%
+  # Calculate total race times for all drivers
+  all_results_with_times <- all_results %>%
     filter(position <= 20) %>%  # Only classified finishers
-    select(round, race_name, driver_id, position, time_sec) %>%
-    filter(!is.na(time_sec)) %>%
-    rename(time_seconds = time_sec)
+    group_by(round) %>%
+    group_modify(~ calculate_race_times(.x)) %>%
+    ungroup()
+  
+  # Prepare race results with total race time in seconds
+  race_times <- all_results_with_times %>%
+    select(round, race_name, driver_id, position, total_race_time_sec) %>%
+    filter(!is.na(total_race_time_sec)) %>%
+    rename(time_seconds = total_race_time_sec)
   
   # Find the winner of each race (position 1) to calculate time behind
   race_winners <- race_times %>%
