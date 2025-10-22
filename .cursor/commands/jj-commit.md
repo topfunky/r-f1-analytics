@@ -5,14 +5,15 @@ Create a jj commit using conventional commit style.
 ## Instructions
 
 1. Run `jj status` to check current changes
-2. Run `jj diff` to view all changes (with appropriate timeout for large diffs)
-3. Run `jj log -r @- -n 5` to check recent commit message style
-4. Analyze all changes carefully:
+1. Run `jj diff` to view all changes (with appropriate timeout for large diffs)
+1. Run `jj log -r @- -n 5` to check recent commit message style
+1. Analyze all changes carefully:
    - Determine the appropriate type (feat, fix, docs, style, refactor, test, chore)
    - Identify the scope based on affected components
    - Draft a clear, concise summary
    - Include bullet points in the body describing key changes
-5. Commit atomically using heredoc format:
+1. Display the proposed commit message to the user for confirmation
+1. Commit atomically using heredoc format:
    ```bash
    jj commit -m "$(cat <<'EOF'
    <type>(<scope>): <summary>
@@ -21,8 +22,8 @@ Create a jj commit using conventional commit style.
    EOF
    )"
    ```
-6. Print the output of the `commit` command so the user can see what happened
-7. Clean up any temporary files created during the diff process
+1. Print the output of the `commit` command so the user can see what happened
+1. Clean up any temporary files created during the diff process
 
 ## Conventional Commit Types
 

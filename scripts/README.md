@@ -95,11 +95,11 @@ main()
 ## Adding New Scripts
 
 1. Create a new `.R` file in this directory
-2. Follow the template structure above
-3. Make it executable: `chmod +x scripts/your_script.R`
-4. Test it: `Rscript scripts/your_script.R`
-5. Format it: `make format`
-6. It will automatically be picked up by `render_all_plots.sh`
+1. Follow the template structure above
+1. Make it executable: `chmod +x scripts/your_script.R`
+1. Test it: `Rscript scripts/your_script.R`
+1. Format it: `make format`
+1. It will automatically be picked up by `render_all_plots.sh`
 
 ## Best Practices
 
@@ -171,8 +171,8 @@ Rscript --verbose scripts/your_script.R
 
 Scripts in this directory are automatically:
 1. Run by GitHub Actions on push to main
-2. Checked for formatting
-3. Generated plots deployed to staging branch
+1. Checked for formatting
+1. Generated plots deployed to staging branch
 
 Ensure scripts:
 - Are non-interactive

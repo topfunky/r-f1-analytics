@@ -32,14 +32,14 @@ This project provides tools and scripts for analyzing Formula 1 data, generating
    cd r-f1-analytics
    ```
 
-2. **Install R dependencies**
+1. **Install R dependencies**
    ```bash
    make install
    # or
    Rscript scripts/setup_project.R
    ```
 
-3. **Generate example plots**
+1. **Generate example plots**
    ```bash
    make plots
    # or
@@ -117,11 +117,11 @@ jj git push
 ### Adding New Analyses
 
 1. Create a new R script in `scripts/`
-2. Follow the template structure (see `scripts/README.md`)
-3. Make it executable: `chmod +x scripts/your_script.R`
-4. Test locally: `Rscript scripts/your_script.R`
-5. Format code: `make format`
-6. Commit and push
+1. Follow the template structure (see `scripts/README.md`)
+1. Make it executable: `chmod +x scripts/your_script.R`
+1. Test locally: `Rscript scripts/your_script.R`
+1. Format code: `make format`
+1. Commit and push
 
 ### Code Style
 
@@ -136,9 +136,9 @@ jj git push
 The GitHub Actions workflow automatically:
 
 1. ✅ Checks R code formatting
-2. 📦 Installs dependencies
-3. 🎨 Generates all plots
-4. 🚀 Deploys to `staging` branch
+1. 📦 Installs dependencies
+1. 🎨 Generates all plots
+1. 🚀 Deploys to `staging` branch
 
 Plots are available on the `staging` branch after each push to `main`.
 
@@ -162,10 +162,10 @@ Plots are available on the `staging` branch after each push to `main`.
 This project uses AI agents for development. When contributing:
 
 1. Read `AGENTS.md` for development guidelines
-2. Follow the code style guide
-3. Format code with `make format`
-4. Test scripts before committing
-5. Update documentation as needed
+1. Follow the code style guide
+1. Format code with `make format`
+1. Test scripts before committing
+1. Update documentation as needed
 
 ## Data Sources
 

@@ -33,13 +33,13 @@ This analysis calculates individual driver points using the post-2010 scoring sy
 
 #### 2023 Season Champions (New Scoring System)
 1. **Max Verstappen** (Red Bull) - 521 points (original: 530)
-2. **Sergio Pérez** (Red Bull) - 258 points (original: 260)
-3. **Lewis Hamilton** (Mercedes) - 213 points (original: 217)
+1. **Sergio Pérez** (Red Bull) - 258 points (original: 260)
+1. **Lewis Hamilton** (Mercedes) - 213 points (original: 217)
 
 #### 2024 Season Champions (New Scoring System)
 1. **Max Verstappen** (Red Bull) - 396 points (original: 399)
-2. **Lando Norris** (McLaren) - 338 points (original: 344)
-3. **Charles Leclerc** (Ferrari) - 324 points (original: 327)
+1. **Lando Norris** (McLaren) - 338 points (original: 344)
+1. **Charles Leclerc** (Ferrari) - 324 points (original: 327)
 
 ### Scoring System Impact
 
@@ -52,13 +52,13 @@ The post-2010 scoring system shows minimal differences from the original system:
 
 #### 2023 Season
 1. **Red Bull** - 779 points (2 drivers)
-2. **Mercedes** - 369 points (2 drivers)
-3. **Ferrari** - 363 points (2 drivers)
+1. **Mercedes** - 369 points (2 drivers)
+1. **Ferrari** - 363 points (2 drivers)
 
 #### 2024 Season
 1. **Red Bull** - 533 points (2 drivers)
-2. **McLaren** - 603 points (2 drivers)
-3. **Ferrari** - 585 points (2 drivers)
+1. **McLaren** - 603 points (2 drivers)
+1. **Ferrari** - 585 points (2 drivers)
 
 ## Technical Details
 
@@ -118,16 +118,16 @@ To analyze additional seasons, modify the `START_YEAR` and `END_YEAR` variables 
 ## Limitations
 
 1. **API Rate Limiting**: The f1dataR package is subject to API rate limits, which may prevent processing all seasons in a single run
-2. **Data Availability**: Some historical seasons may have incomplete data
-3. **Fastest Lap Points**: The analysis removes fastest lap bonus points, which were introduced in 2019
+1. **Data Availability**: Some historical seasons may have incomplete data
+1. **Fastest Lap Points**: The analysis removes fastest lap bonus points, which were introduced in 2019
 
 ## Future Enhancements
 
 1. **Sprint Race Points**: Include sprint race points in the analysis
-2. **Historical Seasons**: Process more historical seasons (2003-2022)
-3. **Interactive Visualizations**: Create interactive plots using plotly
-4. **Driver Comparisons**: Add head-to-head driver comparisons
-5. **Team Analysis**: Expand constructor/team analysis
+1. **Historical Seasons**: Process more historical seasons (2003-2022)
+1. **Interactive Visualizations**: Create interactive plots using plotly
+1. **Driver Comparisons**: Add head-to-head driver comparisons
+1. **Team Analysis**: Expand constructor/team analysis
 
 ## Conclusion
 
