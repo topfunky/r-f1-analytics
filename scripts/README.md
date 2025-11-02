@@ -20,6 +20,20 @@ Bash script that executes all R plotting scripts and generates output files.
 
 ### Example Analyses
 
+#### `analyze_2022_cumulative_time.R`
+Analyzes the 2022 F1 season to calculate cumulative time differences between the fastest overall driver and all other drivers across the season. Generates:
+- CSV table showing cumulative time distance at each race
+- Line plot visualization of cumulative gaps throughout the season
+- Summary statistics of final cumulative differences
+
+```bash
+Rscript scripts/analyze_2022_cumulative_time.R
+```
+
+**Outputs:**
+- `plots/2022_cumulative_time_distance.csv` - Full data table
+- `plots/2022_cumulative_time_distance.png` - Visualization
+
 #### `example_lap_times.R`
 Demonstrates lap time analysis for a specific race. Shows how to:
 - Fetch and cache race data
@@ -81,11 +95,11 @@ main()
 ## Adding New Scripts
 
 1. Create a new `.R` file in this directory
-2. Follow the template structure above
-3. Make it executable: `chmod +x scripts/your_script.R`
-4. Test it: `Rscript scripts/your_script.R`
-5. Format it: `make format`
-6. It will automatically be picked up by `render_all_plots.sh`
+1. Follow the template structure above
+1. Make it executable: `chmod +x scripts/your_script.R`
+1. Test it: `Rscript scripts/your_script.R`
+1. Format it: `make format`
+1. It will automatically be picked up by `render_all_plots.sh`
 
 ## Best Practices
 
@@ -157,8 +171,8 @@ Rscript --verbose scripts/your_script.R
 
 Scripts in this directory are automatically:
 1. Run by GitHub Actions on push to main
-2. Checked for formatting
-3. Generated plots deployed to staging branch
+1. Checked for formatting
+1. Generated plots deployed to staging branch
 
 Ensure scripts:
 - Are non-interactive

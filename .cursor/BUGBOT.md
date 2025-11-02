@@ -208,17 +208,17 @@ When reviewing PRs:
 
 ### CI Pipeline Broken
 1. Check GitHub Actions logs
-2. Identify failing step
-3. Test fix locally: `./scripts/render_all_plots.sh`
-4. Push fix with clear description
-5. Monitor CI until green
+1. Identify failing step
+1. Test fix locally: `./scripts/render_all_plots.sh`
+1. Push fix with clear description
+1. Monitor CI until green
 
 ### Data Source Changed
 1. Check f1dataR package updates
-2. Update data fetching code
-3. Update cache format if needed
-4. Test with current season data
-5. Document changes in commit
+1. Update data fetching code
+1. Update cache format if needed
+1. Test with current season data
+1. Document changes in commit
 
 ## Monitoring & Metrics
 Regularly check:
