@@ -50,8 +50,8 @@ main <- function() {
     schedule <- fetch_with_cache(load_schedule, cache_file, season = season)
     
     # Add season column
-    schedule <- schedule %>%
-      mutate(season = season) %>%
+    schedule <- schedule |>
+      mutate(season = season) |>
       select(season, everything())
     
     all_schedules <- bind_rows(all_schedules, schedule)
@@ -69,8 +69,8 @@ main <- function() {
   cat("Schedule Data Summary:\n")
   cat("==========================================================\n")
   
-  summary_stats <- all_schedules %>%
-    group_by(season) %>%
+  summary_stats <- all_schedules |>
+    group_by(season) |>
     summarise(
       total_races = n(),
       races_with_dates = sum(!is.na(date)),
@@ -87,10 +87,10 @@ main <- function() {
   
   # Check for missing values
   cat("\nMissing values analysis:\n")
-  missing_summary <- all_schedules %>%
-    summarise_all(~ sum(is.na(.))) %>%
-    pivot_longer(everything(), names_to = "column", values_to = "missing_count") %>%
-    mutate(missing_percentage = round(missing_count / nrow(all_schedules) * 100, 2)) %>%
+  missing_summary <- all_schedules |>
+    summarise_all(~ sum(is.na(.))) |>
+    pivot_longer(everything(), names_to = "column", values_to = "missing_count") |>
+    mutate(missing_percentage = round(missing_count / nrow(all_schedules) * 100, 2)) |>
     arrange(desc(missing_count))
   
   print(missing_summary, row.names = FALSE)

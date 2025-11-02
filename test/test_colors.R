@@ -74,7 +74,7 @@ main <- function() {
   )
 
   # Create driver points plot
-  p1 <- sample_data %>%
+  p1 <- sample_data |>
     ggplot(aes(x = reorder(driver, points), y = points)) +
     geom_col(aes(fill = driver), alpha = 0.8) +
     coord_flip() +
@@ -102,7 +102,7 @@ main <- function() {
   cat("✓ Driver colors test plot saved\n")
 
   # Create team points plot
-  p2 <- sample_data %>%
+  p2 <- sample_data |>
     ggplot(aes(x = reorder(team, points), y = points)) +
     geom_col(aes(fill = team), alpha = 0.8) +
     coord_flip() +

@@ -101,7 +101,7 @@ calculate_race_times <- function(results_df) {
   }
   
   # Calculate total race time for each driver
-  results_df <- results_df %>%
+  results_df <- results_df |>
     mutate(
       gap_seconds = case_when(
         position == "1" ~ 0,  # Winner has no gap
@@ -111,7 +111,7 @@ calculate_race_times <- function(results_df) {
         !is.na(gap_seconds) ~ winner_time_sec + gap_seconds,
         TRUE ~ NA_real_
       )
-    ) %>%
+    ) |>
     select(-gap_seconds)  # Remove the helper column
   
   return(results_df)
@@ -155,7 +155,7 @@ fetch_all_race_results <- function(schedule, season) {
     )
     
     # Add race metadata
-    race_results <- race_results %>%
+    race_results <- race_results |>
       mutate(
         round = round_num,
         race_name = race_name
@@ -173,29 +173,29 @@ calculate_race_time_differences <- function(all_results) {
   cat("\nStep 3: Calculating race time differences...\n")
   
   # Calculate total race times for all drivers
-  all_results_with_times <- all_results %>%
-    filter(position <= 20) %>%  # Only classified finishers
-    group_by(round) %>%
-    group_modify(~ calculate_race_times(.x)) %>%
+  all_results_with_times <- all_results |>
+    filter(position <= 20) |>  # Only classified finishers
+    group_by(round) |>
+    group_modify(~ calculate_race_times(.x)) |>
     ungroup()
   
   # Prepare race results with total race time in seconds
-  race_times <- all_results_with_times %>%
-    select(round, race_name, driver_id, position, total_race_time_sec) %>%
-    filter(!is.na(total_race_time_sec)) %>%
+  race_times <- all_results_with_times |>
+    select(round, race_name, driver_id, position, total_race_time_sec) |>
+    filter(!is.na(total_race_time_sec)) |>
     rename(time_seconds = total_race_time_sec)
   
   # Find the winner of each race (position 1) to calculate time behind
-  race_winners <- race_times %>%
-    filter(position == 1) %>%
+  race_winners <- race_times |>
+    filter(position == 1) |>
     select(round, winner_time = time_seconds)
   
   # Calculate time behind winner for each race
-  race_times_behind <- race_times %>%
-    left_join(race_winners, by = "round") %>%
+  race_times_behind <- race_times |>
+    left_join(race_winners, by = "round") |>
     mutate(
       time_behind = time_seconds - winner_time
-    ) %>%
+    ) |>
     select(round, race_name, driver_id, position, time_behind)
   
   return(race_times_behind)
@@ -206,17 +206,17 @@ calculate_cumulative_times <- function(race_times_behind) {
   cat("\nStep 4: Calculating cumulative time differences...\n")
   
   # Calculate cumulative time differences
-  cumulative_times <- race_times_behind %>%
-    arrange(driver_id, round) %>%
-    group_by(driver_id) %>%
+  cumulative_times <- race_times_behind |>
+    arrange(driver_id, round) |>
+    group_by(driver_id) |>
     mutate(
       cumulative_time_behind = cumsum(time_behind)
-    ) %>%
+    ) |>
     ungroup()
   
   # Find the driver with minimum cumulative time (fastest overall)
-  final_cumulative <- cumulative_times %>%
-    filter(round == max(round)) %>%
+  final_cumulative <- cumulative_times |>
+    filter(round == max(round)) |>
     arrange(cumulative_time_behind)
   
   fastest_driver_id <- final_cumulative$driver_id[1]
@@ -226,17 +226,17 @@ calculate_cumulative_times <- function(race_times_behind) {
   cat(sprintf("  Total cumulative time: %.2f seconds\n", fastest_driver_time))
   
   # Calculate distance from fastest driver
-  cumulative_distance <- cumulative_times %>%
-    arrange(driver_id, round) %>%
+  cumulative_distance <- cumulative_times |>
+    arrange(driver_id, round) |>
     left_join(
-      cumulative_times %>%
-        filter(driver_id == fastest_driver_id) %>%
+      cumulative_times |>
+        filter(driver_id == fastest_driver_id) |>
         select(round, fastest_cumulative = cumulative_time_behind),
       by = "round"
-    ) %>%
+    ) |>
     mutate(
       distance_from_fastest = cumulative_time_behind - fastest_cumulative
-    ) %>%
+    ) |>
     select(round, race_name, driver_id, cumulative_time_behind, distance_from_fastest)
   
   return(list(
@@ -250,13 +250,13 @@ calculate_cumulative_times <- function(race_times_behind) {
 create_distance_table <- function(cumulative_distance) {
   cat("\nStep 5: Creating cumulative distance table...\n")
   
-  distance_table <- cumulative_distance %>%
-    select(round, race_name, driver_id, distance_from_fastest) %>%
+  distance_table <- cumulative_distance |>
+    select(round, race_name, driver_id, distance_from_fastest) |>
     pivot_wider(
       names_from = driver_id,
       values_from = distance_from_fastest,
       names_prefix = ""
-    ) %>%
+    ) |>
     arrange(round)
   
   # Save table as CSV
@@ -279,15 +279,15 @@ create_visualization <- function(cumulative_distance, fastest_driver_id) {
   cat("\nStep 6: Creating visualization...\n")
   
   # Get top drivers to plot (those with most races)
-  top_drivers <- cumulative_distance %>%
-    group_by(driver_id) %>%
-    summarise(races = n(), final_distance = max(distance_from_fastest)) %>%
-    arrange(races, final_distance) %>%
-    filter(races >= 15) %>%  # At least 15 races
-    head(10) %>%
+  top_drivers <- cumulative_distance |>
+    group_by(driver_id) |>
+    summarise(races = n(), final_distance = max(distance_from_fastest)) |>
+    arrange(races, final_distance) |>
+    filter(races >= 15) |>  # At least 15 races
+    head(10) |>
     pull(driver_id)
   
-  plot_data <- cumulative_distance %>%
+  plot_data <- cumulative_distance |>
     filter(driver_id %in% top_drivers)
   
   # Create line plot
@@ -338,14 +338,14 @@ print_summary_statistics <- function(cumulative_distance) {
   cat("Final Cumulative Time Distance (Top 10 Regular Drivers):\n")
   cat("==========================================================\n")
   
-  final_summary <- cumulative_distance %>%
-    filter(round == max(round)) %>%
-    arrange(distance_from_fastest) %>%
+  final_summary <- cumulative_distance |>
+    filter(round == max(round)) |>
+    arrange(distance_from_fastest) |>
     mutate(
       position = row_number(),
       distance_minutes = distance_from_fastest / 60
-    ) %>%
-    select(position, driver_id, distance_from_fastest, distance_minutes) %>%
+    ) |>
+    select(position, driver_id, distance_from_fastest, distance_minutes) |>
     head(10)
   
   print(final_summary, row.names = FALSE)

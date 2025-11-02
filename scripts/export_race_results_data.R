@@ -74,7 +74,7 @@ main <- function() {
     )
     
     # Add race metadata
-    race_results <- race_results %>%
+    race_results <- race_results |>
       mutate(
         round = round_num,
         race_name = race_name
@@ -102,43 +102,43 @@ main <- function() {
   
   # Missing values analysis
   cat("\nMissing values analysis:\n")
-  missing_summary <- all_results %>%
-    summarise_all(~ sum(is.na(.))) %>%
-    pivot_longer(everything(), names_to = "column", values_to = "missing_count") %>%
-    mutate(missing_percentage = round(missing_count / nrow(all_results) * 100, 2)) %>%
+  missing_summary <- all_results |>
+    summarise_all(~ sum(is.na(.))) |>
+    pivot_longer(everything(), names_to = "column", values_to = "missing_count") |>
+    mutate(missing_percentage = round(missing_count / nrow(all_results) * 100, 2)) |>
     arrange(desc(missing_count))
   
   print(missing_summary, row.names = FALSE)
   
   # Gap column analysis (this is where NA values likely come from)
   cat("\nGap column analysis:\n")
-  gap_analysis <- all_results %>%
-    group_by(round, race_name) %>%
+  gap_analysis <- all_results |>
+    group_by(round, race_name) |>
     summarise(
       total_drivers = n(),
       drivers_with_gap = sum(!is.na(gap)),
       drivers_without_gap = sum(is.na(gap)),
       gap_missing_pct = round(sum(is.na(gap)) / n() * 100, 2),
       .groups = "drop"
-    ) %>%
+    ) |>
     arrange(desc(gap_missing_pct))
   
   print(gap_analysis, row.names = FALSE)
   
   # Sample of gap values
   cat("\nSample gap values:\n")
-  gap_samples <- all_results %>%
-    select(round, race_name, position, driver_id, gap) %>%
-    filter(!is.na(gap)) %>%
+  gap_samples <- all_results |>
+    select(round, race_name, position, driver_id, gap) |>
+    filter(!is.na(gap)) |>
     head(20)
   
   print(gap_samples, row.names = FALSE)
   
   # Sample of missing gap values
   cat("\nSample missing gap values:\n")
-  missing_gap_samples <- all_results %>%
-    select(round, race_name, position, driver_id, gap, status) %>%
-    filter(is.na(gap)) %>%
+  missing_gap_samples <- all_results |>
+    select(round, race_name, position, driver_id, gap, status) |>
+    filter(is.na(gap)) |>
     head(20)
   
   print(missing_gap_samples, row.names = FALSE)
